@@ -1,3 +1,165 @@
+///The current state of the keyboard modifiers
+pub struct ModifiersState {
+    /// Whether a shift key is pressed
+    pub shift: bool,
+
+    /// Whether a control key is pressed
+    pub control: bool,
+
+    /// Whether an alt key is pressed
+    pub alt: bool,
+
+    /// Whether a logo key is pressed (e.g. windows key, command key...)
+    pub logo: bool,
+}
+
+impl ModifiersState {
+    /// Returns true if the current [`ModifiersState`] has at least the same
+    /// modifiers enabled as the given value, and false otherwise.
+    
+    pub fn matches(&self, modifiers: ModifiersState) -> bool {
+        let shift = !modifiers.shift || self.shift;
+        let control = !modifiers.control || self.control;
+        let alt = !modifiers.alt || self.alt;
+        let logo = !modifiers.logo || self.logo;
+
+        shift && control && alt && logo
+    }
+}
+
+///A keyboard event
+pub enum Keyboard{
+    ///A keyboard key was pressed 
+    KeyPressed {
+        ///The key identifier
+        key_code: i16,
+
+        ///The state of the modifiers keys
+        modifiers: ModifiersState,
+    },
+    ///A keyboard key was released
+    KeyReleased {
+        ///The key identifier
+        key_code: i16,
+        ///The state of the modifiers keys
+        modifiers: ModifiersState,
+    },
+    ///The keyboard modifiers have changed
+    ModifiersChanged(ModifiersState),
+
+}
+
+///A mouse event
+pub enum Mouse{
+    ///A mouse button was pressed
+    ButtonPressed(MouseButton),
+    
+    ///A mouse button was released
+    ButtonReleased(MouseButton),
+
+    ///The mouse cursor entered the window
+    CursorEntered,
+
+    ///The mouse cursor left the window
+    CursorLeft,
+
+    ///The mouse cursor moved
+    CursorMoved{
+        ///The X coordinate of the mouse position
+        x: f32,
+
+        ///The Y coordinate of the mouse position
+        y: f32
+    },
+
+    ///The mouse wheel was scrolled
+    WheelScrolled{
+        ///The scroll movement
+        delta: ScrollDelta,
+    },
+}
+
+///The button of a mouse
+pub enum MouseButton {
+    /// The left mouse button.
+    Left,
+
+    /// The right mouse button.
+    Right,
+
+    /// The middle (wheel) button.
+    Middle,
+
+    /// Some other button.
+    Other(u8),
+}
+
+pub enum ScrollDelta {
+    /// A pixel-based scroll movement
+    Pixels {
+        /// The number of horizontal pixels scrolled
+        x: f32,
+
+        /// The number of vertical pixels scrolled
+        y: f32,
+    },
+}
+
+///A window event
+pub enum Window{
+    ///The window was rezised
+    Resized{
+        ///The new width of the window
+        width: u32,
+
+        ///The new height of the window
+        height: u32
+    }
+}
+
+///Representation of an user interface event
+pub enum Event {
+    /// A keyboard event (eg. KeyPressed, KeyRelease...)
+    Keyboard(Keyboard),
+
+    ///A mouse event (eg. LeftClick, MouseMove,...)
+    Mouse(Mouse),
+
+    ///A windown event (eg. Resize, ...)
+    Window(Window)
+}
+
+
+impl Event {
+    // TODO: funcoes
+    fn on_event(event: Event) { 
+        unimplemented!()
+    }
+    
+}
+
+pub trait Display {
+    
+}
+
+struct BoxLayout {
+    min_x: unimplemented!(),
+    max_x: unimplemented!(),
+    min_y: unimplemented!(),
+    max_y: unimplemented!()
+}
+
+struct SliverLayout {
+}
+
+pub trait Widget {
+
+}
+
+pub trait Renderer {
+    
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -5,52 +167,5 @@ mod tests {
         assert_eq!(2 + 2, 4);
     }
 }
-
-pub struct Key{
-    key_code: i8,
-    modifiers: i8
-}
-
-pub enum Keyboard{
-    KeyPressed(Key),
-    KeyReleased(Key)
-}
-
-pub enum Mouse{
-    CursorEntered,
-    CursorLeft,
-    CursorMoved {
-        x: f32,
-        y: f32,
-    },
-    WheelScroolled{
-        value: f32
-    },
-    ButtonPressed(MouseButton),
-    ButtonReleased(MouseButton)
-}
-
-pub enum MouseButton{
-    Left,
-    Right,
-    Middle
-}
-
-
-pub enum EventType{
-    Mouse(Mouse),
-    Keyboard(Keyboard)
-}
-
-
-pub trait EventSystem{
-    fn new_event() -> EventType;
-}
-
-
-pub trait Renderer {
-    
-}
-
 
 
