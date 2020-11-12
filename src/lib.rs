@@ -138,15 +138,112 @@ impl Event {
     
 }
 
+/// Structure that contains optional settings for a display window.
+/// It should be used when creating a new Display.
+/// It also provides default settings for a new Display.
+pub struct DisplayDescritor {
+    /// Indicates if display has a border (default: true)
+    border: bool,
+    /// Indicates if display is titled (default: true)
+    titled: bool,
+    /// Indicates if display is resizable (default: false)
+    resizable: bool,
+    /// Indicates if display always appears on top of all displays which are not topmost (default: false)
+    topmost: bool,
+    /// Indicates if display is minimizable (default: true)
+    minimizable: bool,
+}
+
+impl DisplayDescritor {
+    /// Returns a DisplayDescriptor with default values, allowing to override each attribute
+    ///
+    /// #Arguments
+    /// 
+    /// #Examples
+    /// 
+    /// ```no_run
+    /// let mut display_descriptor = DisplayDescriptor { border: false, titled: false, ..Default::default() }
+    /// ```
+    /// 
+    /// ```no_run
+    /// let mut display_descriptor = DisplayDescriptor { ..Default::default() }
+    /// ```
+    fn default() -> DisplayDescritor {
+        DisplayDescritor {
+            border: true,
+            titled: true,
+            resizable: false,
+            topmost: false,
+            minimizable: true,
+        }
+    }
+}
+
+/// Implements the necessary methods to a complete Display/Window system
 pub trait Display {
+    type Buffer;
+
+    /// Creates and opens up a new display
+    /// 
+    /// #Arguments
+    /// 
+    /// #Examples
+    /// 
+    /// Create and open up a display with popup behaviour
+    /// 
+    /// ```no_run
+    /// impl Display for Implementor {
+    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
+    ///         ...
+    ///     }
+    /// }
+    /// ```
+    /// 
+    /// ```no_run
+    /// let mut display = Implementor::new("Example", 640, 400,
+    ///     DisplayDescriptor {
+    ///         topmost: true,
+    ///         minimizable: false,
+    ///         ..DisplayDescriptor::default()
+    /// });
+    /// ```
+    fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self;
+
+    /// Sets a new title for the display
+    /// 
+    /// #Arguments
+    /// 
+    /// #Examples
+    /// 
+    /// ```no_run
+    /// impl Display for Implementor {
+    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
+    ///         ...
+    ///     }
+    /// 
+    ///     fn set_title(&mut self, title: &str) -> Self {
+    ///         ...
+    ///     }
+    /// }
+    /// ```
+    /// 
+    /// ```no_run
+    /// let mut display = Implementor::new("Example", 640, 400, DisplayDescriptor::default());
+    /// 
+    /// display.set_title("Other Example");
+    /// ```
+    fn set_title(&mut self, title: &str);
     
+    /// 
+    /// 
+    fn buffer(&self) -> Self::Buffer;
 }
 
 struct BoxLayout {
-    min_x: unimplemented!(),
-    max_x: unimplemented!(),
-    min_y: unimplemented!(),
-    max_y: unimplemented!()
+    // min_x: unimplemented!(),
+    // max_x: unimplemented!(),
+    // min_y: unimplemented!(),
+    // max_y: unimplemented!()
 }
 
 struct SliverLayout {
