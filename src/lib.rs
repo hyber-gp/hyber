@@ -1,3 +1,6 @@
+mod key_code;
+pub use key_code::KeyCode;
+
 ///The current state of the keyboard modifiers
 pub struct ModifiersState {
     /// Whether a shift key is pressed
@@ -32,7 +35,7 @@ pub enum Keyboard{
     ///A keyboard key was pressed 
     KeyPressed {
         ///The key identifier
-        key_code: i16,
+        key_code: KeyCode,
 
         ///The state of the modifiers keys
         modifiers: ModifiersState,
@@ -40,7 +43,7 @@ pub enum Keyboard{
     ///A keyboard key was released
     KeyReleased {
         ///The key identifier
-        key_code: i16,
+        key_code: KeyCode,
         ///The state of the modifiers keys
         modifiers: ModifiersState,
     },
@@ -130,9 +133,9 @@ pub enum Event {
 }
 
 
+
 impl Event {
-    // TODO: funcoes
-    fn on_event(event: Event) { 
+    fn insert_queue(event: Event, queue: &[Event]) {
         unimplemented!()
     }
     
@@ -153,11 +156,37 @@ struct SliverLayout {
 }
 
 pub trait Widget {
-
+    fn on_event(event: Event) { 
+        unimplemented!()
+    }
 }
 
 pub trait Renderer {
-    
+    /// This function is needed to map the events detected (Window, Keyboard, Mouse) into hyber events
+    /// 
+    /// # Returns an hyber Event
+    ///
+    /// # Arguments
+    /// It receives a generic event 
+    ///  
+    /// # Examples
+    /// fn map_events<T>(event: T) -> Event {
+    ///     ...
+    ///     match event {
+    ///         leftclick => {
+    ///             Mouse(Mouse::ButtonPressed(MouseButton::Left))
+    ///         }
+    ///         ...
+    ///     }
+    /// }
+    fn map_events<T>(event: T) -> Event;
+
+    fn event_loop() {
+        loop{
+            
+        }
+    }
+
 }
 
 #[cfg(test)]
@@ -165,6 +194,7 @@ mod tests {
     #[test]
     fn it_works() {
         assert_eq!(2 + 2, 4);
+        
     }
 }
 
