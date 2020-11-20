@@ -1,6 +1,9 @@
 mod key_code;
 pub use key_code::KeyCode;
 
+mod queue;
+pub use queue::Queue;
+
 ///The current state of the keyboard modifiers
 pub struct ModifiersState {
     /// Whether a shift key is pressed
@@ -133,13 +136,15 @@ pub enum Event {
 }
 
 
-
 impl Event {
+    
     fn insert_queue(event: Event, queue: &[Event]) {
-        unimplemented!()
+        //unimplemented!()
+        
     }
     
 }
+
 
 pub trait Display {
     
@@ -180,10 +185,18 @@ pub trait Renderer {
     ///     }
     /// }
     fn map_events<T>(event: T) -> Event;
+    
+    fn create_queue() -> Queue<Event> {
+        let mut queue: Queue<Event> = Queue::new();
+        queue
+    }
 
-    fn event_loop() {
+    fn event_loop(queue: Queue<Event>) {
         loop{
-            
+            if queue.lenght() != 0{
+                let event = queue.dequeue();
+                println!("novo evento")
+            }
         }
     }
 
