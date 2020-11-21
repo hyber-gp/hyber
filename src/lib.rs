@@ -190,12 +190,17 @@ pub trait Renderer {
         let mut queue: Queue<Event> = Queue::new();
         queue
     }
-
+    ///Este loop é responsável por:
+    /// -> recolher os eventos do sistema
+    /// -> dar update da user interface fazendo iteração sobre os eventos
+    /// -> desenhar
+    /// -> percorrer as mensagens e fazer o update
     fn event_loop(queue: Queue<Event>) {
         loop{
+            /// RECOLHER -> MAPEAR -> METER NA QUEUE
             if queue.lenght() != 0{
                 let event = queue.dequeue();
-                println!("novo evento")
+                println!("novo evento");
             }
         }
     }
