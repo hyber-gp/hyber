@@ -550,6 +550,80 @@ pub trait Display {
     // Tudo menos Cursor, Unscaled, Menus e limit_update_rate
 }
 
+/// A simple Point struct to store coordinates
+pub struct Point {
+    x: u32,
+    y: u32,
+}
+
+/// Implements the method for a new point
+impl Point {
+    pub fn new(x: u32, y: u32) -> Point {
+        Point {
+            x,
+            y,
+        }
+    }
+}
+
+/// Implements the methods for the rendering primitives
+pub trait Primitives {
+
+    /// This function is used to draw lines
+    /// 
+    /// # Returns 
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `start` - coordinates where the line starts
+    /// * `end` - coordinates where the line ends
+    fn line(start: Point, end: Point);
+    
+    /// This function is used to draw triangles
+    /// 
+    /// # Returns 
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `start` - coordinates where the triangle starts
+    /// * `curve` - set of points that will define the rest of the triangle
+    fn triangle(start: Point, curve: [Point,2]);
+
+    /// This function is used to draw quads
+    /// 
+    /// # Returns 
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `start` - coordinates where the quad starts
+    /// * `curve` - set of points that will define the rest of the quad
+    fn quad(start: Point, curve: [Point,3]);
+    
+    /// This function is used to draw text
+    /// 
+    /// # Returns 
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `txt` - string of text to be written
+    /// * `point_size` - size of the text
+    /// * `coordinates` - a set of points where the text will be drawn
+    /// * `font` - font to be used
+    fn text(txt: &str, point_size: f32, start: Point, font: Font);
+
+    /// This function is used to draw an image
+    /// 
+    /// # Returns 
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `width` - width of drawn image
+    /// * `height` - height of drawn image 
+    /// * `coordinates` - a set of points where the image will be drawn
+    /// * `image` - pointer to the location of the image
+    fn image(width: u32, height: u32, coordinates: Point, image: &Image);
+}
+
 struct BoxLayout {
     // min_x: unimplemented!(),
     // max_x: unimplemented!(),
