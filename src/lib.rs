@@ -138,11 +138,6 @@ pub enum Event {
 
 impl Event {
     
-    fn insert_queue(event: Event, queue: &[Event]) {
-        //unimplemented!()
-        
-    }
-    
 }
 
 
@@ -160,16 +155,21 @@ struct BoxLayout {
 struct SliverLayout {
 }
 
-pub trait Widget {
-    fn on_event(event: Event) { 
+pub trait Widget<Message> {
+    fn on_event(event: Event, messages: Queue<Message>) { 
         unimplemented!()
     }
 }
 
 pub trait Renderer {
-    /// This function is needed to map the events detected (Window, Keyboard, Mouse) into hyber events
+
+    type Message;
+    
+    /// This function is needed to map the events detected (Window, Keyboard, Mouse) into hyber events.
+    /// We recommend user to define T has an enum.
     /// 
-    /// # Returns an hyber Event
+    /// # Returns 
+    /// An hyber Event
     ///
     /// # Arguments
     /// It receives a generic event 
@@ -186,22 +186,57 @@ pub trait Renderer {
     /// }
     fn map_events<T>(event: T) -> Event;
     
-    fn create_queue() -> Queue<Event> {
+    ///This function creates a queue of events
+    /// 
+    /// # Returns 
+    /// An empty vector for events
+    /// 
+    /// # Arguments
+    /// No args
+    fn create_events_queue() -> Queue<Event> {
         let mut queue: Queue<Event> = Queue::new();
         queue
     }
+    
+    /// This function creates a queue of messages.
+    /// Message should be an enum.
+    /// # Returns 
+    /// An empty vector for messages
+    /// 
+    /// # Arguments
+    /// No args
+    fn create_message_queue<Message>() -> Queue<Message> {
+        let mut queue: Queue<Message> = Queue::new();
+        queue
+    }
+    
+    /// This function is used to detect the system events and map them into hyber events using map_events function.
+    /// The user should implement this function and put the events on the queue, using queue.enqueue .
+    /// 
+    /// # Returns 
+    /// No returns
+    ///
+    /// # Arguments
+    /// Receives the queue and system (generic type to access system events eg. in minifb crate its accessed via window). 
+    fn detect_sys_events<T>(queue: &Queue<Event>, system: T);
+
     ///Este loop é responsável por:
     /// -> recolher os eventos do sistema
     /// -> dar update da user interface fazendo iteração sobre os eventos
     /// -> desenhar
     /// -> percorrer as mensagens e fazer o update
-    fn event_loop(queue: Queue<Event>) {
+    fn event_loop<Message,T>(queue: Queue<Event>, message: Queue<Message>, system: T) {
         loop{
-            /// RECOLHER -> MAPEAR -> METER NA QUEUE
-            if queue.lenght() != 0{
+            // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
+            Renderer::detect_sys_events(&queue, system);
+            /*if queue.lenght() != 0{
                 let event = queue.dequeue();
                 println!("novo evento");
-            }
+            }*/
+            // 2º chamar on event na arvore de widgets
+            // 3º desenhar
+            // 4º percorrer as mensagens e fazer update
+            
         }
     }
 
