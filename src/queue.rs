@@ -1,5 +1,5 @@
 pub struct Queue<T> {
-    queue: Vec<T>,
+    pub queue: Vec<T>,
 }
 
 impl<T> Queue<T> {

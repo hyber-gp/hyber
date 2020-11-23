@@ -146,19 +146,26 @@ pub trait Display {
 }
 
 struct BoxLayout {
-    min_x: unimplemented!(),
-    max_x: unimplemented!(),
-    min_y: unimplemented!(),
-    max_y: unimplemented!()
+    //min_x: unimplemented!(),
+    //max_x: unimplemented!(),
+    //min_y: unimplemented!(),
+    //max_y: unimplemented!()
 }
 
 struct SliverLayout {
 }
 
 pub trait Widget<Message> {
-    fn on_event(event: Event, messages: Queue<Message>) { 
-        unimplemented!()
-    }
+    /// This function is needed to detect if the event is being done on this widget, update the state of 
+    /// the widget based on event and place a message in the message queue.
+    /// 
+    /// # Returns 
+    /// An hyber Event
+    ///
+    /// # Arguments
+    /// * `event` - an hyber event
+    /// * `messages` - queue of messages 
+    fn on_event(event: Event, messages: &Queue<Message>);
 }
 
 pub trait Renderer{
@@ -166,13 +173,13 @@ pub trait Renderer{
     type Message;
     
     /// This function is needed to map the events detected (Window, Keyboard, Mouse) into hyber events.
-    /// We recommend user to define T has an enum.
+    /// We recommend user to define T as an enum.
     /// 
     /// # Returns 
     /// An hyber Event
     ///
     /// # Arguments
-    /// It receives a generic event 
+    /// `event` - a generic event 
     ///  
     /// # Examples
     /// fn map_events<T>(event: T) -> Event {
@@ -194,7 +201,7 @@ pub trait Renderer{
     /// # Arguments
     /// No args
     fn create_events_queue() -> Queue<Event> {
-        let mut queue: Queue<Event> = Queue::new();
+        let queue: Queue<Event> = Queue::new();
         queue
     }
     
@@ -206,7 +213,7 @@ pub trait Renderer{
     /// # Arguments
     /// No args
     fn create_message_queue() -> Queue<Self::Message> {
-        let mut queue: Queue<Self::Message> = Queue::new();
+        let queue: Queue<Self::Message> = Queue::new();
         queue
     }
     
@@ -217,25 +224,38 @@ pub trait Renderer{
     /// No returns
     ///
     /// # Arguments
-    /// Receives the queue and system (generic type to access system events eg. in minifb crate its accessed via window). 
+    /// * `events` - queue of events
+    /// * `system` - a generic type to access system events eg. in minifb crate its accessed via window 
     fn detect_sys_events<T>(events: &Queue<Event>, system: T);
 
-    ///Este loop é responsável por:
-    /// -> recolher os eventos do sistema
-    /// -> dar update da user interface fazendo iteração sobre os eventos
-    /// -> desenhar
-    /// -> percorrer as mensagens e fazer o update
-    fn event_loop<T>(events: Queue<Event>, messages: Queue<Self::Message>, system: T) {
+
+    /// This function has the event loop of hyber. It can be described in 4 steps:
+    /// * 1st - To recall the system events.
+    /// * 2nd - Call the on_event in our widget tree, regarding the queue of events.
+    /// * 3rd - Draw.
+    /// * 4th - Iterate over message queue and update the state.
+    /// 
+    /// # Returns 
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `events` - queue of events
+    /// * `messages` - queue of messages
+    /// * `system` - a generic type to access system events eg. in minifb crate its accessed via window
+    fn event_loop<T: Copy>(mut events: Queue<Event>,mut messages: Queue<Self::Message>, system: T) {
         loop{
             // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
             Self::detect_sys_events(&events, system);
-            /*if queue.lenght() != 0{
-                let event = queue.dequeue();
+            if events.lenght() != 0{
+                let _event = events.dequeue();
                 println!("novo evento");
-            }*/
+            }
             // 2º chamar on event na arvore de widgets
             // 3º desenhar
             // 4º percorrer as mensagens e fazer update
+            for _message in messages.queue.drain(..){
+
+            }
             
         }
     }
