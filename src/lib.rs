@@ -161,7 +161,7 @@ pub trait Widget<Message> {
     }
 }
 
-pub trait Renderer {
+pub trait Renderer{
 
     type Message;
     
@@ -205,30 +205,30 @@ pub trait Renderer {
     /// 
     /// # Arguments
     /// No args
-    fn create_message_queue<Message>() -> Queue<Message> {
-        let mut queue: Queue<Message> = Queue::new();
+    fn create_message_queue() -> Queue<Self::Message> {
+        let mut queue: Queue<Self::Message> = Queue::new();
         queue
     }
     
     /// This function is used to detect the system events and map them into hyber events using map_events function.
-    /// The user should implement this function and put the events on the queue, using queue.enqueue .
+    /// The user should implement this function and put the events on the queue events, using events.enqueue .
     /// 
     /// # Returns 
     /// No returns
     ///
     /// # Arguments
     /// Receives the queue and system (generic type to access system events eg. in minifb crate its accessed via window). 
-    fn detect_sys_events<T>(queue: &Queue<Event>, system: T);
+    fn detect_sys_events<T>(events: &Queue<Event>, system: T);
 
     ///Este loop é responsável por:
     /// -> recolher os eventos do sistema
     /// -> dar update da user interface fazendo iteração sobre os eventos
     /// -> desenhar
     /// -> percorrer as mensagens e fazer o update
-    fn event_loop<Message,T>(queue: Queue<Event>, message: Queue<Message>, system: T) {
+    fn event_loop<T>(events: Queue<Event>, messages: Queue<Self::Message>, system: T) {
         loop{
             // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
-            Renderer::detect_sys_events(&queue, system);
+            Self::detect_sys_events(&events, system);
             /*if queue.lenght() != 0{
                 let event = queue.dequeue();
                 println!("novo evento");
