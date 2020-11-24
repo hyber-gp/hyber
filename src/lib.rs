@@ -55,12 +55,68 @@ impl Instruction {
     }
 }
 
-/// Example
-/// 
-/// Insertion:
-///     map.insert(1, RenderInstruction::DrawPoint);
-/// Get Key-Value:
+/// Example:
+///
+/// Criar:
+///     (-> BTreeMap<K, V>)
+///     - makes a new empty BTreeMap.
+///
+///     let mut map = BTreeMap::new();
+///
+/// Limpar:
+///     - clears the map, removing all elements
+///
+///     map.clear();
+///
+/// Get Value:
+///     (-> Option<&V>)
+///     - returns a reference to the value corresponding to the key
+///
 ///     map.get(&1);
+///
+/// Get Key-Value:
+///     (-> Option<(&K, &V)>)
+///     - returns the key-value pair corresponding to the supplied key
+///
+///     map.get_key_value(&1);
+///
+/// Get Mutable Value:
+///     (-> Option<&mut V>)
+///     - returns a mutable reference to the value corresponding to the key.
+///
+///     map.get_mut(&1);
+///
+/// Contains Key:
+///     (bool)
+///     - returns true if the map contains a value for the specified key.
+///
+///     map.contains_key(&1);
+///
+/// First Key-Value:
+///     (-> Option<(&K, &V)>)
+///     - to obtain the first key-value pair in the map
+///
+///     map.first_key_value();
+///
+/// Insertion:
+///     (-> Option<V>)
+///     - inserts a key-value pair into the map
+///
+///     map.insert(1, RenderInstruction::DrawPoint);
+///
+/// Remove:
+///     (-> Option<V>)
+///     - removes a key from the map, returning the value at the key
+///     - if the key was previously in the map
+///
+///     map.remove(&1);
+///
+/// Remove Entry:
+///     (-> Option<(K, V)>)
+///     - removes a key from the map, returning the stored key and value
+///     - if the key was previously in the map
+///
+///     map.remove_entry(&1);
 
 let mut instruction = BTreeMap::new();
 
