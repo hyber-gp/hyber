@@ -1,37 +1,54 @@
-/// Enumeration with the Render Instructions
+/// Enumeration with the Render Instructions @joaosantos
+/// <name>Abs for Instructions to be drawn on absolute positions
+/// <name>Rel for Instructions to be drawn on relative positions
 pub enum RenderInstruction {
     /// Instruction to the Render that a point needs to be drawn on the next Clipping
-    /// This instruction
+    /// The point should be rendered on absolute coordinates (x,y)
 	DrawPoint,
     /// Instruction to the Render that a line needs to be drawn on the next Clipping
-	DrawLine,
-	// Draw a line relative to current position
-	DrawLineRel,
-	// Draw a line from current position to absolute position
-	DrawLineTo,
-	// Draw a path
-	DrawPath,
-	// Draw a rect
-	DrawRect,
-	// Draw a triangle
-	DrawTriangle,
-	// Draw a polygon
-	DrawPolygon,
-	// Draw an arc
-	DrawArc,
-	// Draw a complete circle
-	DrawCircle,
-	// Draw an ellipse
-	DrawEllipse,
-	// Draw text at coordinates X, Y
-	DrawTextXY,
-	// Move cursor to absolute position
-	MoveTo,
-	// Move cursor relative to current position
-	MoveRel,
-	// Clear some widget from the screen 
-	Clear,
+    /// The line should be rendered on absolute coordinates from (x1, y1) to (x2, y2)
+	DrawLineAbs,
+	/// Instruction to the Render that a line needs to be drawn on the next Clipping
+    DrawLineRel,
+    /// Instruction to the Render that an arc needs to be drawn on the next Clipping
+    /// The arc should be rendered with center on absolute coordinates (x, y), 'r'
+    /// radius, 'sang' start angle and 'eang' end angle
+    DrawArc,
+    /// Instruction to the Render that a circle needs to be drawn on the next Clipping
+    /// The circle should be rendered with center on absolute coordinates (x, y) and 'r'
+    /// radius
+    DrawCircleAbs,
+    /// Instruction to the Render that a rectangle needs to be drawn on the next Clipping
+    /// The rectangle should be rendered on absolute coordinates (x, y) with 'l' length
+    /// and 'w' width
+	DrawRectAbs,
+    /// Instruction to the Render that a rectangle needs to be drawn on the next Clipping
+    DrawRectRel,
+    /// Instruction to the Render that a triangle needs to be drawn on the next Clipping
+    /// The triangle should be rendered between the absolute coordinates (x1, y1),
+    /// (x2, y2) and (x3, y3)
+    DrawTriangleAbs,
+    /// Instruction to the Render that a triangle needs to be drawn on the next Clipping
+    DrawTriangleRel,
+    /// Instruction to the Render that an image needs to be drawn on the next Clipping
+    /// [Doubt] The image should be rendered with center on the absolute coordinates (x, y)
+    /// and with 'w' width and 'l' length
+    DrawImageAbs,
+    /// Instruction to the Render that an image needs to be drawn on the next Clipping
+    DrawImageRel,
+    /// Instruction to the Render that some text needs to be drawn on the next Clipping
+    /// [Doubt] The text should be rendered according to the text_alignment
+    DrawTextAbs,
+    /// Instruction to the Render that some text needs to be drawn on the next Clipping
+    DrawTextRel
 }
+/// Assumptions:
+///     - 2D Meshes are compounded by a list of triangles so the instructions are gonna be
+///     multiple DrawTriangleAbs intructions
+///     Reference: https://github.com/hecrj/iced/blob/master/graphics/src/triangle.rs
+///     - Based on: https://en.wikipedia.org/wiki/Geometric_primitive
+///     - And on:   https://www.freepascal.org/docs-html/current/rtl/graph/funcdrawing.html
+
 
 pub enum Event {
     //TODO: Rato, teclado, window
