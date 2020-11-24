@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 /// Enumeration with the Render Instructions @joaosantos
 /// <name>Abs for Instructions to be drawn on absolute positions
 /// <name>Rel for Instructions to be drawn on relative positions
@@ -48,6 +50,43 @@ pub enum RenderInstruction {
 ///     Reference: https://github.com/hecrj/iced/blob/master/graphics/src/triangle.rs
 ///     - Based on: https://en.wikipedia.org/wiki/Geometric_primitive
 ///     - And on:   https://www.freepascal.org/docs-html/current/rtl/graph/funcdrawing.html
+
+// Structure of an Instruction to be on the Render Instrucstions Collection
+pub struct Instruction {
+    pub id: u32,
+    pub instruction: RenderInstruction,
+}
+
+/// Implements the method for a new Instruction
+impl Instruction {
+    pub fn new(id: u32, instruction: RenderInstruction) -> Instruction {
+        Instruction {
+            id,
+            instruction,
+        }
+    }
+}
+
+/// Example
+/// 
+/// Insertion:
+///     map.insert(1, RenderInstruction::DrawPoint);
+/// Get Key-Value:
+///     map.get(&1);
+
+let mut instruction = BTreeMap::new();
+
+/// Assumptions for the map:
+///  - Need to have a key-value pair of <u32, RenderInstruction>/<id, RenderInstruction>
+/// Requirements:
+///  - Fast iterator, due to client requirements of rendering
+/// 
+/// BTreeMap is the choice because of our use case:
+///     - You want a map sorted by its keys.
+///
+/// References: 
+///     - https://doc.rust-lang.org/std/collections/struct.BTreeMap.html#method.remove
+///     - https://doc.rust-lang.org/std/collections/index.html#use-a-btreemap-when
 
 
 pub enum Event {
