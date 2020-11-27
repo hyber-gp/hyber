@@ -135,12 +135,6 @@ pub enum Event {
     Window(Window)
 }
 
-
-impl Event {
-    
-}
-
-
 pub trait Display {
     
 }
@@ -201,7 +195,7 @@ pub trait Renderer{
     /// # Arguments
     /// No args
     fn create_events_queue() -> Queue<Event> {
-        let queue: Queue<Event> = Queue::new();
+        let queue: Queue<Event> = Queue::<Event>::new();
         queue
     }
     
@@ -226,7 +220,8 @@ pub trait Renderer{
     /// # Arguments
     /// * `events` - queue of events
     /// * `system` - a generic type to access system events eg. in minifb crate its accessed via window 
-    fn detect_sys_events<T>(events: &Queue<Event>, system: T);
+    fn detect_sys_events(events: &Queue<Event>);
+    //fn detect_sys_events<T>(events: &Queue<Event>, system: T);
 
 
     /// This function has the event loop of hyber. It can be described in 4 steps:
@@ -242,6 +237,7 @@ pub trait Renderer{
     /// * `events` - queue of events
     /// * `messages` - queue of messages
     /// * `system` - a generic type to access system events eg. in minifb crate its accessed via window
+    /*
     fn event_loop<T: Copy>(mut events: Queue<Event>,mut messages: Queue<Self::Message>, system: T) {
         loop{
             // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
@@ -258,7 +254,26 @@ pub trait Renderer{
             }
             
         }
+    }*/
+    fn event_loop(mut events: Queue<Event>,mut messages: Queue<Self::Message>) {
+        loop{
+            // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
+            Self::detect_sys_events(&events);
+            if events.lenght() != 0{
+                let _event = events.dequeue();
+                println!("novo evento");
+            }
+            // 2º chamar on event na arvore de widgets
+            // 3º desenhar
+            // 4º percorrer as mensagens e fazer update
+            for _message in messages.queue.drain(..){
+
+            }
+            
+        }
     }
+
+
 
 }
 
