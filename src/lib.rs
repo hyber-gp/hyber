@@ -162,7 +162,7 @@ pub trait Widget<Message> {
     fn on_event(event: Event, messages: &Queue<Message>);
 }
 
-pub trait Renderer{
+pub trait Renderer<T,X>{
 
     type Message;
     
@@ -185,7 +185,7 @@ pub trait Renderer{
     ///         ...
     ///     }
     /// }
-    fn map_events<T>(event: T) -> Event;
+    fn map_events(event: X) -> Event;
     
     ///This function creates a queue of events
     /// 
@@ -194,7 +194,7 @@ pub trait Renderer{
     /// 
     /// # Arguments
     /// No args
-    fn create_events_queue() -> Queue<Event> {
+    fn create_events_queue(&mut self) -> Queue<Event> {
         let queue: Queue<Event> = Queue::<Event>::new();
         queue
     }
@@ -206,7 +206,7 @@ pub trait Renderer{
     /// 
     /// # Arguments
     /// No args
-    fn create_message_queue() -> Queue<Self::Message> {
+    fn create_message_queue(&mut self) -> Queue<Self::Message> {
         let queue: Queue<Self::Message> = Queue::new();
         queue
     }
@@ -220,8 +220,8 @@ pub trait Renderer{
     /// # Arguments
     /// * `events` - queue of events
     /// * `system` - a generic type to access system events eg. in minifb crate its accessed via window 
-    fn detect_sys_events(events: &Queue<Event>);
-    //fn detect_sys_events<T>(events: &Queue<Event>, system: T);
+    //fn detect_sys_events(events: &Queue<Event>);
+    fn detect_sys_events(events: &mut Queue<Event>, system: &mut T);
 
 
     /// This function has the event loop of hyber. It can be described in 4 steps:
@@ -237,11 +237,11 @@ pub trait Renderer{
     /// * `events` - queue of events
     /// * `messages` - queue of messages
     /// * `system` - a generic type to access system events eg. in minifb crate its accessed via window
-    /*
-    fn event_loop<T: Copy>(mut events: Queue<Event>,mut messages: Queue<Self::Message>, system: T) {
+    
+    fn event_loop(&mut self, mut events: Queue<Event>,mut messages: Queue<Self::Message>, system: &mut T) {
         loop{
             // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
-            Self::detect_sys_events(&events, system);
+            Self::detect_sys_events(&mut events, system);
             if events.lenght() != 0{
                 let _event = events.dequeue();
                 println!("novo evento");
@@ -249,13 +249,13 @@ pub trait Renderer{
             // 2º chamar on event na arvore de widgets
             // 3º desenhar
             // 4º percorrer as mensagens e fazer update
-            for _message in messages.queue.drain(..){
+            /*for _message in messages.queue.drain(..){
 
-            }
+            }*/
             
         }
-    }*/
-    fn event_loop(mut events: Queue<Event>,mut messages: Queue<Self::Message>) {
+    }/*
+    fn event_loop(&mut self, mut events: Queue<Event>,mut messages: Queue<Self::Message>) {
         loop{
             // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
             Self::detect_sys_events(&events);
@@ -271,11 +271,10 @@ pub trait Renderer{
             }
             
         }
-    }
-
-
-
+    }*/
 }
+
+
 
 #[cfg(test)]
 mod tests {
