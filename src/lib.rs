@@ -148,15 +148,15 @@ impl Event {
 /// It also provides default settings for a new Display.
 pub struct DisplayDescritor {
     /// Indicates if display has a border (default: true)
-    border: bool,
+    pub border: bool,
     /// Indicates if display is titled (default: true)
-    titled: bool,
+    pub titled: bool,
     /// Indicates if display is resizable (default: false)
-    resizable: bool,
+    pub resizable: bool,
     /// Indicates if display always appears on top of all displays which are not topmost (default: false)
-    topmost: bool,
+    pub topmost: bool,
     /// Indicates if display is minimizable (default: true)
-    minimizable: bool,
+    pub minimizable: bool,
 }
 
 impl DisplayDescritor {
@@ -173,7 +173,7 @@ impl DisplayDescritor {
     /// ```no_run
     /// let mut display_descriptor = DisplayDescriptor { ..Default::default() }
     /// ```
-    fn default() -> DisplayDescritor {
+    pub fn default() -> DisplayDescritor {
         DisplayDescritor {
             border: true,
             titled: true,
@@ -202,7 +202,7 @@ pub trait Display {
     /// 
     /// ```no_run
     /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
+    ///     fn new(title: &str, width: usize, height: usize, display_descriptor: DisplayDescritor) -> Self {
     ///         ...
     ///     }
     /// }
@@ -216,7 +216,7 @@ pub trait Display {
     ///         ..DisplayDescriptor::default()
     /// });
     /// ```
-    fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self;
+    fn new(title: &str, width: usize, height: usize, display_descriptor: DisplayDescritor) -> Self;
 
     /// Sets a new title for the display
     /// 
@@ -228,10 +228,6 @@ pub trait Display {
     /// 
     /// ```no_run
     /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
-    ///         ...
-    ///     }
-    /// 
     ///     fn set_title(&mut self, title: &str) {
     ///         ...
     ///     }
@@ -244,31 +240,6 @@ pub trait Display {
     /// display.set_title("Other Example");
     /// ```
     fn set_title(&mut self, title: &str);
-    
-    /// Returns the pixel buffer associated to the display
-    /// 
-    /// # Arguments
-    /// 
-    /// # Examples
-    /// 
-    /// ```no_run
-    /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
-    ///         ...
-    ///     }
-    /// 
-    ///     fn get_buffer(&mut self) {
-    ///         &mut self::Buffer
-    ///     }
-    /// }
-    /// ```
-    /// 
-    /// ```no_run
-    /// let mut display = Implementor::new("Example", 640, 400, DisplayDescriptor::default());
-    /// 
-    /// let &mut buffer = display.get_buffer();
-    /// ```
-    fn get_buffer(&mut self) -> &mut Self::Buffer;
 
     /// Updates the display
     /// 
@@ -280,14 +251,6 @@ pub trait Display {
     /// 
     /// ```no_run
     /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
-    ///         ...
-    ///     }
-    /// 
-    ///     fn set_title(&mut self, title: &str) {
-    ///         ...
-    ///     }
-    /// 
     ///     fn update(&mut self) {
     ///         ...
     ///     }
@@ -310,7 +273,7 @@ pub trait Display {
     /// # Examples
     /// 
     /// 
-    fn update_with_buffer(&mut self);
+    fn update_with_buffer(&mut self, buffer: &Self::Buffer, width: usize, height: usize);
 
     /// Check if the display is open. The user may want to take some action depending on this state.
     /// 
@@ -320,10 +283,6 @@ pub trait Display {
     /// 
     /// ```no_run
     /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
-    ///         ...
-    ///     }
-    /// 
     ///     fn is_open(&self) -> bool {
     ///         ...
     ///     }
@@ -347,11 +306,7 @@ pub trait Display {
     /// 
     /// ```no_run
     /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
-    ///         ...
-    ///     }
-    /// 
-    ///     fn set_position(&mut self, x: u32, y: u32) {
+    ///     fn set_position(&mut self, x: usize, y: usize) {
     ///         ...
     ///     }
     /// }
@@ -362,9 +317,9 @@ pub trait Display {
     /// 
     /// display.set_position(0, 0);
     /// ```
-    fn set_position(&mut self, x: u32, y: u32);
+    fn set_position(&mut self, x: usize, y: usize);
 
-    /// Adds a border to the display
+    /// Toggles a border in the display
     /// 
     /// # Arguments
     /// * `border` - boolean indicating if display has a border
@@ -375,10 +330,6 @@ pub trait Display {
     /// 
     /// ```no_run
     /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
-    ///         ...
-    ///     }
-    /// 
     ///     fn border(&mut self, border: bool) {
     ///         ...
     ///     }
@@ -401,10 +352,6 @@ pub trait Display {
     /// 
     /// ```no_run
     /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
-    ///         ...
-    ///     }
-    /// 
     ///     fn resizable(&mut self, resizable: bool) {
     ///         ...
     ///     }
@@ -427,10 +374,6 @@ pub trait Display {
     /// 
     /// ```no_run
     /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
-    ///         ...
-    ///     }
-    /// 
     ///     fn topmost(&mut self, topmost: bool) {
     ///         ...
     ///     }
@@ -455,10 +398,6 @@ pub trait Display {
     /// 
     /// ```no_run
     /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
-    ///         ...
-    ///     }
-    /// 
     ///     fn minimizable(&mut self, minimizable: bool) {
     ///         ...
     ///     }
@@ -485,11 +424,7 @@ pub trait Display {
     /// 
     /// ```no_run
     /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
-    ///         ...
-    ///     }
-    /// 
-    ///     fn set_background_color(&mut self, red: u32, green: u32, blue: u32) {
+    ///     fn set_background_color(&mut self, red: usize, green: usize, blue: usize) {
     ///         ...
     ///     }
     /// }
@@ -500,7 +435,7 @@ pub trait Display {
     /// 
     /// display.set_background_color(255, 255, 0);
     /// ```
-    fn set_background_color(&mut self, red: u32, green: u32, blue: u32);
+    fn set_background_color(&mut self, red: usize, green: usize, blue: usize);
 
     /// Returns the current size of the display
     /// 
@@ -510,11 +445,7 @@ pub trait Display {
     /// 
     /// ``no_run
     /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
-    ///         ...
-    ///     }
-    /// 
-    ///     fn get_size(&self) -> (u32, u32) {
+    ///     fn get_size(&self) -> (usize, usize) {
     ///         ...
     ///     }
     /// }
@@ -525,7 +456,7 @@ pub trait Display {
     /// 
     /// let size = display.get_size();
     /// ```
-    fn get_size(&self) -> (u32, u32);
+    fn get_size(&self) -> (usize, usize);
 
     /// Checks if the display is the current active one
     /// 
@@ -535,11 +466,7 @@ pub trait Display {
     /// 
     /// ``no_run
     /// impl Display for Implementor {
-    ///     fn new(title: &str, width: u32, height: u32, display_descriptor: DisplayDescritor) -> Self {
-    ///         ...
-    ///     }
-    /// 
-    ///     fn is_active(&self) -> bool {
+    ///     fn is_active(&mut self) -> bool {
     ///         ...
     ///     }
     /// }
@@ -550,7 +477,7 @@ pub trait Display {
     /// 
     /// let display_active = display.is_active();
     /// ```
-    fn is_active(&self) -> bool;
+    fn is_active(&mut self) -> bool;
 
     // Tudo menos Cursor, Unscaled, Menus e limit_update_rate
 }
@@ -654,7 +581,7 @@ pub trait Renderer<T,X>{
     /// * `messages` - queue of messages
     /// * `system` - a generic type to access system events eg. in minifb crate its accessed via window
     
-    fn event_loop(&mut self, mut events: Queue<Event>,mut messages: Queue<Self::Message>, system: &mut T) {
+    fn event_loop(&mut self, mut events: Queue<Event>, mut messages: Queue<Self::Message>, system: &mut T) {
         loop{
             // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
             Self::detect_sys_events(&mut events, system);
@@ -670,24 +597,7 @@ pub trait Renderer<T,X>{
             }*/
             
         }
-    }/*
-    fn event_loop(&mut self, mut events: Queue<Event>,mut messages: Queue<Self::Message>) {
-        loop{
-            // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
-            Self::detect_sys_events(&events);
-            if events.lenght() != 0{
-                let _event = events.dequeue();
-                println!("novo evento");
-            }
-            // 2º chamar on event na arvore de widgets
-            // 3º desenhar
-            // 4º percorrer as mensagens e fazer update
-            for _message in messages.queue.drain(..){
-
-            }
-            
-        }
-    }*/
+    }
 }
 
 
