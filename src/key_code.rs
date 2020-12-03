@@ -1,4 +1,3 @@
-
 pub enum KeyCode {
     /// The '1' key over the letters.
     Key1,
