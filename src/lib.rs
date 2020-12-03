@@ -135,14 +135,6 @@ pub enum Event {
     Window(Window)
 }
 
-impl Event {
-    // TODO: funcoes
-    fn on_event(event: Event) { 
-        unimplemented!()
-    }
-    
-}
-
 /// Structure that contains optional settings for a display window.
 /// It should be used when creating a new Display.
 /// It also provides default settings for a new Display.
@@ -489,9 +481,17 @@ struct BoxLayout {
     // max_y: unimplemented!()
 }
 
-struct SliverLayout {
+pub trait Display {
+    
 }
 
+struct BoxLayout {
+    min_x: unimplemented!(),
+    max_x: unimplemented!(),
+    min_y: unimplemented!(),
+    max_y: unimplemented!()
+}
+  
 pub trait Widget<Message> {
     /// This function is needed to detect if the event is being done on this widget, update the state of 
     /// the widget based on event and place a message in the message queue.
@@ -599,8 +599,6 @@ pub trait Renderer<T,X>{
         }
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
