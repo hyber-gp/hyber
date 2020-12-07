@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 /// Enumeration with the Render Instructions
 #[derive(Copy, Clone, Debug)]
-pub enum RenderInstruction<P, C> {
+pub enum RenderInstruction<'a, P, C> {
     /// Instruction to the Render that a point needs to be drawn on the next Clipping
     /// The point should be rendered on absolute coordinates (x,y)
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
@@ -62,7 +62,7 @@ pub enum RenderInstruction<P, C> {
 
     /// Instruction to the Render that some text needs to be drawn on the next Clipping
     /// [Doubt] The text should be rendered according to the text_alignment
-    DrawText { point: P },
+    DrawText { point: P , string: &'a str},
 }
 // Assumptions:
 //     - 2D Meshes are compounded by a list of triangles so the instructions are gonna be
@@ -72,13 +72,13 @@ pub enum RenderInstruction<P, C> {
 //     - And on:   https://www.freepascal.org/docs-html/current/rtl/graph/funcdrawing.html
 
 /// Structure of an Instruction to be on the Render Instructions Collection
-pub struct Instruction<P, C> {
+pub struct Instruction<'a, P, C> {
     pub id: u32,
-    pub instruction: RenderInstruction<P, C>,
+    pub instruction: RenderInstruction<'a, P, C>,
 }
 
 /// Implements the method for a new Instruction
-impl<P, C> Instruction<P, C> {
+impl<'a, P, C> Instruction<'a, P, C> {
     pub fn new(id: u32, instruction: RenderInstruction<P, C>) -> Instruction<P, C> {
         Instruction { id, instruction }
     }
@@ -254,7 +254,7 @@ pub trait Renderer<D, E, P, C> {
 /// rendered each frame
 #[derive(Debug)]
 pub struct RenderInstructionCollection<'a, P, C> {
-    pub instructions: &'a BTreeMap<u32, Vec<RenderInstruction<P, C>>>,
+    pub instructions: &'a BTreeMap<u32, Vec<RenderInstruction<'a, P, C>>>,
 }
 // Assumptions for the map:
 //  - Need to have a key-value pair of <u32, RenderInstruction>/<id, RenderInstruction>
