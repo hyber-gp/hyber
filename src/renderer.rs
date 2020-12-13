@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 /// Enumeration with the Render Instructions
 #[derive(Copy, Clone, Debug)]
-pub enum RenderInstruction<'a, P, C> {
+pub enum RenderInstruction<'a, P, C, O> {
     /// Instruction to the Render that a point needs to be drawn on the next Clipping
     /// The point should be rendered on absolute coordinates (x,y)
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
@@ -58,7 +58,7 @@ pub enum RenderInstruction<'a, P, C> {
     /// Instruction to the Render that an image needs to be drawn on the next Clipping
     /// [Doubt] The image should be rendered with center on the absolute coordinates (x, y)
     /// and with 'w' width and 'l' length
-    DrawImage { point: P },
+    DrawImage { point: P, path: &'a str, options: O},
 
     /// Instruction to the Render that some text needs to be drawn on the next Clipping
     /// [Doubt] The text should be rendered according to the text_alignment
@@ -72,19 +72,19 @@ pub enum RenderInstruction<'a, P, C> {
 //     - And on:   https://www.freepascal.org/docs-html/current/rtl/graph/funcdrawing.html
 
 /// Structure of an Instruction to be on the Render Instructions Collection
-pub struct Instruction<'a, P, C> {
+pub struct Instruction<'a, P, C, O> {
     pub id: u32,
-    pub instruction: RenderInstruction<'a, P, C>,
+    pub instruction: RenderInstruction<'a, P, C, O>,
 }
 
 /// Implements the method for a new Instruction
-impl<'a, P, C> Instruction<'a, P, C> {
-    pub fn new(id: u32, instruction: RenderInstruction<P, C>) -> Instruction<P, C> {
+impl<'a, P, C, O> Instruction<'a, P, C, O> {
+    pub fn new(id: u32, instruction: RenderInstruction<P, C, O>) -> Instruction<P, C, O> {
         Instruction { id, instruction }
     }
 }
 
-pub trait Renderer<D, E, P, C> {
+pub trait Renderer<D, E, P, C, O> {
     type Message;
     /// This function is needed to map the events detected (Window, Keyboard, Mouse) into hyber events.
     /// We recommend user to define T as an enum.
@@ -184,7 +184,7 @@ pub trait Renderer<D, E, P, C> {
     ///
     /// # Arguments
     /// * `instruction` - RenderInstruction to draw a primitive
-    fn draw(&mut self, instruction: RenderInstruction<P, C>, display: &mut D);
+    fn draw(&mut self, instruction: RenderInstruction<P, C, O>, display: &mut D);
 }
 
 // Example:
@@ -253,8 +253,8 @@ pub trait Renderer<D, E, P, C> {
 /// Structure that represents the collection of Render Instructions to be
 /// rendered each frame
 #[derive(Debug)]
-pub struct RenderInstructionCollection<'a, P, C> {
-    pub instructions: &'a BTreeMap<u32, Vec<RenderInstruction<'a, P, C>>>,
+pub struct RenderInstructionCollection<'a, P, C, O> {
+    pub instructions: &'a BTreeMap<u32, Vec<RenderInstruction<'a, P, C, O>>>,
 }
 // Assumptions for the map:
 //  - Need to have a key-value pair of <u32, RenderInstruction>/<id, RenderInstruction>
