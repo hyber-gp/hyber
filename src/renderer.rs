@@ -140,7 +140,7 @@ pub trait Renderer<D, E, P, C> {
     /// * `events` - queue of events
     /// * `display` - a generic type to access display events eg. in minifb crate its accessed via window
     //fn detect_display_events(events: &Queue<Event>);
-    fn detect_display_events(events: &mut Queue<Event>, display: &mut D);
+    fn detect_display_events(events: &mut Queue<Event>, display: &mut D, buffer: &Vec<u32>);
 
     /// This function has the event loop of hyber. It can be described in 4 steps:
     /// * 1st - To recall the display events.
@@ -160,13 +160,14 @@ pub trait Renderer<D, E, P, C> {
         mut events: Queue<Event>,
         mut messages: Queue<Self::Message>,
         display: &mut D,
+        buffer: &Vec<u32>
     ) {
         loop {
             // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
-            Self::detect_display_events(&mut events, display);
+            Self::detect_display_events(&mut events, display,buffer);
             if events.lenght() != 0 {
                 let _event = events.dequeue();
-                println!("novo evento");
+                println!("{:?}",_event);
             }
             // 2º chamar on event na arvore de widgets
             // 3º desenhar
