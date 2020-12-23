@@ -124,10 +124,34 @@ pub trait Display {
     /// Updates the display along with its buffer
     ///
     /// # Arguments
+    /// * `buffer` - buffer associated with the display
+    /// * `width` - width of the buffer
+    /// * `height` - height of the buffer
     ///
     /// # Examples
+    /// 
+    /// Updates the display along with its buffer after setting the background color to green
     ///
+    /// ```no_run
+    /// impl Display for Implementor {
+    ///     fn update_with_buffer(&mut self, buffer: &Self::Buffer, width: usize, height: usize) {
+    ///         ...
+    ///     }
+    /// }
+    /// ```
     ///
+    /// ```no_run
+    /// 
+    /// let mut display = Implementor::new("Example", 640, 400, DisplayDescriptor::default());
+    ///
+    /// display.set_background_color(0, 255, 0);
+    /// 
+    /// (width, height) = display.get_size();
+    /// 
+    /// let mut buffer: buffer: Vec<u32> = vec![0x00FF00; width * height];
+    ///
+    /// display.update_with_buffer(buffer, width, height);
+    /// ```
     fn update_with_buffer(&mut self, buffer: &Self::Buffer, width: usize, height: usize);
 
     /// Check if the display is open. The user may want to take some action depending on this state.
@@ -309,7 +333,7 @@ pub trait Display {
     /// ```no_run
     /// let mut display = Implementor::new("Example", 640, 400, DisplayDescriptor::default());
     ///
-    /// let size = display.get_size();
+    /// let (width, height) = display.get_size();
     /// ```
     fn get_size(&self) -> (usize, usize);
 
@@ -333,6 +357,4 @@ pub trait Display {
     /// let display_active = display.is_active();
     /// ```
     fn is_active(&mut self) -> bool;
-
-    // Tudo menos Cursor, Unscaled, Menus e limit_update_rate
 }
