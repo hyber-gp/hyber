@@ -114,6 +114,7 @@ pub enum Window {
         ///The new height of the window
         height: u32,
     },
+    Close,
 }
 #[derive(Debug)]
 ///Representation of an user interface event

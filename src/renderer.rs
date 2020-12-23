@@ -1,4 +1,5 @@
 use crate::event::Event;
+use crate::event::Window;
 use crate::util::Queue;
 
 use std::collections::BTreeMap;
@@ -94,7 +95,7 @@ pub trait Renderer<D, E, P, C, O> {
     ///
     /// # Arguments
     /// `event` - a generic event
-    ///  
+    ///
     /// # Examples
     /// fn map_events<T>(event: E) -> Event {
     ///     ...
@@ -167,8 +168,15 @@ pub trait Renderer<D, E, P, C, O> {
             Self::detect_display_events(&mut events, display,buffer);
             if events.lenght() != 0 {
                 let _event = events.dequeue();
-                println!("{:?}",_event);
+                match _event {
+                    Event::Window(Window::Close) => {
+                        println!("{:?}",_event);
+                        break;
+                    },
+                    _ => println!("{:?}",_event),
+                }
             }
+
             // 2º chamar on event na arvore de widgets
             // 3º desenhar
             // 4º percorrer as mensagens e fazer update
