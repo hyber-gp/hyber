@@ -385,7 +385,7 @@ impl Widget<MessageXPTO> for LabelWidget {
 
     fn build(&self, instruction_collection: &mut RenderInstructionCollection) {
         instruction_collection
-            .instructions
+            .pairs
             .insert(self.id, self.recipe.clone());
     }
 

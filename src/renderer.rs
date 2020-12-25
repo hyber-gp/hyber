@@ -1,3 +1,4 @@
+use crate::display::Display;
 use crate::event::Event;
 use crate::util::Color;
 use crate::util::MessageXPTO;
@@ -152,7 +153,7 @@ pub trait Renderer<D, E> {
     /// * `events` - queue of events
     /// * `display` - a generic type to access display events eg. in minifb crate its accessed via window
     //fn detect_display_events(events: &Queue<Event>);
-    fn detect_display_events(events: &mut Queue<Event>, display: &mut D, buffer: &Vec<u32>);
+    fn detect_display_events(events: &mut Queue<Event>, display: &mut D);
 
     /// This function has the event loop of hyber. It can be described in 4 steps:
     /// * 1st - To recall the display events.
@@ -172,17 +173,104 @@ pub trait Renderer<D, E> {
         mut events: Queue<Event>,
         mut messages: Queue<Self::Message>,
         display: &mut D,
-        buffer: &Vec<u32>,
+        collection: &mut RenderInstructionCollection,
     ) {
         loop {
             // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
-            Self::detect_display_events(&mut events, display, buffer);
+            Self::detect_display_events(&mut events, display);
             if events.lenght() != 0 {
                 let _event = events.dequeue();
+
                 println!("{:?}", _event);
+                match _event {
+                    Event::Mouse(x) => match x {
+                        crate::event::Mouse::ButtonPressed(button) => match button {
+                            crate::event::MouseButton::Right => collection.replace_or_insert(
+                                0,
+                                vec![
+                                    // Add instructions to the widget's vectors
+                                    RenderInstruction::DrawRect {
+                                        point: Point { x: 100.0, y: 10.0 },
+                                        length: 200,
+                                        width: 50,
+                                        color: Color {
+                                            a: 0xff,
+                                            r: 0x00,
+                                            g: 0x00,
+                                            b: 0xff,
+                                        },
+                                    },
+                                    RenderInstruction::DrawText {
+                                        point: Point { x: 140.0, y: 50.0 },
+                                        string: String::from("Right Click"),
+                                    },
+                                ],
+                            ),
+
+                            crate::event::MouseButton::Left => collection.replace_or_insert(
+                                0,
+                                vec![
+                                    // Add instructions to the widget's vectors
+                                    RenderInstruction::DrawRect {
+                                        point: Point { x: 10.0, y: 100.0 },
+                                        length: 200,
+                                        width: 50,
+                                        color: Color {
+                                            a: 0xff,
+                                            r: 0x00,
+                                            g: 0x00,
+                                            b: 0xff,
+                                        },
+                                    },
+                                    RenderInstruction::DrawText {
+                                        point: Point { x: 50.0, y: 140.0 },
+                                        string: String::from("Left Click"),
+                                    },
+                                ],
+                            ),
+                            _ => (),
+                        },
+                        _ => (),
+                    },
+                    Event::Keyboard(key) => match key {
+                        crate::event::Keyboard::KeyPressed {
+                            key_code,
+                            modifiers,
+                        } => collection.replace_or_insert(
+                            1,
+                            vec![
+                                // Add instructions to the widget's vectors
+                                RenderInstruction::DrawRect {
+                                    point: Point { x: 10.0, y: 10.0 },
+                                    length: 120,
+                                    width: 50,
+                                    color: Color {
+                                        a: 0xff,
+                                        r: 0xff,
+                                        g: 0x00,
+                                        b: 0xff,
+                                    },
+                                },
+                                RenderInstruction::DrawText {
+                                    point: Point { x: 40.0, y: 50.0 },
+                                    string: String::from(format!("{:?}", key_code)),
+                                },
+                            ],
+                        ),
+                        crate::event::Keyboard::KeyReleased {
+                            key_code,
+                            modifiers,
+                        } => collection.remove(1),
+                        _ => (),
+                    },
+                    _ => (),
+                }
             }
             // 2º chamar on event na arvore de widgets
+            // estes eventos alterarão a collection.
+
             // 3º desenhar
+            self.draw_collection(collection, display);
             // 4º percorrer as mensagens e fazer update
             /*for _message in messages.queue.drain(..){
 
@@ -197,7 +285,7 @@ pub trait Renderer<D, E> {
     ///
     /// # Arguments
     /// * `instruction` - RenderInstruction to draw a primitive
-    fn draw(&mut self, instruction: &RenderInstruction, display: &mut D);
+    fn draw_collection(&mut self, collection: &RenderInstructionCollection, display: &mut D);
 }
 
 // Example:
@@ -266,7 +354,23 @@ pub trait Renderer<D, E> {
 /// Structure that represents the collection of Render Instructions to be
 /// rendered each frame
 pub struct RenderInstructionCollection {
-    pub instructions: BTreeMap<usize, Vec<RenderInstruction>>,
+    pub pairs: BTreeMap<usize, Vec<RenderInstruction>>,
+}
+
+impl RenderInstructionCollection {
+    pub fn new() -> RenderInstructionCollection {
+        RenderInstructionCollection {
+            pairs: BTreeMap::<usize, Vec<RenderInstruction>>::new(),
+        }
+    }
+
+    pub fn replace_or_insert(&mut self, id: usize, instructions: Vec<RenderInstruction>) {
+        self.pairs.insert(id, instructions);
+    }
+
+    pub fn remove(&mut self, id: usize) {
+        self.pairs.remove(&id);
+    }
 }
 // Assumptions for the map:
 //  - Need to have a key-value pair of <u32, RenderInstruction>/<id, RenderInstruction>
