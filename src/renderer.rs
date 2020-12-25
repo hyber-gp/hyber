@@ -1,10 +1,7 @@
-use crate::display::Display;
 use crate::event::Event;
 use crate::util::Color;
-use crate::util::MessageXPTO;
 use crate::util::Point;
 use crate::util::Queue;
-use crate::widget::Widget;
 
 use std::collections::BTreeMap;
 
@@ -55,7 +52,7 @@ pub enum RenderInstruction {
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
     DrawRect {
         point: Point,
-        length: u32,
+        height: u32,
         width: u32,
         color: Color,
     },
@@ -182,7 +179,7 @@ pub trait Renderer<D, E> {
                 let _event = events.dequeue();
 
                 println!("{:?}", _event);
-                match _event {
+                /* match _event {
                     Event::Mouse(x) => match x {
                         crate::event::Mouse::ButtonPressed(button) => match button {
                             crate::event::MouseButton::Right => collection.replace_or_insert(
@@ -191,7 +188,7 @@ pub trait Renderer<D, E> {
                                     // Add instructions to the widget's vectors
                                     RenderInstruction::DrawRect {
                                         point: Point { x: 100.0, y: 10.0 },
-                                        length: 200,
+                                        height: 200,
                                         width: 50,
                                         color: Color {
                                             a: 0xff,
@@ -264,7 +261,7 @@ pub trait Renderer<D, E> {
                         _ => (),
                     },
                     _ => (),
-                }
+                }*/
             }
             // 2º chamar on event na arvore de widgets
             // estes eventos alterarão a collection.

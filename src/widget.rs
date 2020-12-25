@@ -3,11 +3,9 @@ use crate::renderer::DrawImageOptions;
 use crate::renderer::RenderInstruction;
 use crate::renderer::RenderInstructionCollection;
 use crate::util::Color;
-use crate::util::MessageXPTO;
+use crate::util::IDMachine;
 use crate::util::Point;
 use crate::util::Queue;
-
-use std::cmp::Ordering;
 
 /// Enum that classifies the type of constraints that
 /// a parent imposes to its children
@@ -45,31 +43,38 @@ pub trait Widget<M> {
     /// * `messages` - queue of messages
     fn on_event(&mut self, event: Event, messages: &Queue<M>);
 
+    /// TODO: documentar
+    fn set_id(&mut self, id: usize);
     fn id(&self) -> usize;
 
-    /// @joaosantos
+    /// @tofulynx
     /// this returns the "recipe" of the widget. In other words,
     /// it returns the collection of Instructions that tell the
     /// renderer how to draw this widget.
-    fn recipe(&self) -> &Vec<RenderInstruction>;
+    fn recipe(&self) -> Vec<RenderInstruction>;
 
-    /// @joaosantos
+    /// @tofulynx
     /// recursive function
     /// 3 steps:
     /// - add recipe() instructions to display's tree view
     /// - mark_as_clean()
     /// - call build() on children
-    fn build(&self, instruction_collection: &mut RenderInstructionCollection);
-
-    /// @joaosantos
+    /// @tofulynx
     /// marks widget and its children as dirty - they need to be rebuilt!
-    fn mark_as_dirty(&mut self);
+    fn mark_as_dirty(&mut self, instruction_collection: &mut RenderInstructionCollection) {
+        self.set_dirty(true);
 
-    /// @joaosantos
+        for child in self.get_children().iter_mut() {
+            child.mark_as_dirty(instruction_collection);
+        }
+    }
+
+    /// @tofulynx
     /// For internal use only. Called by build(). marks widget as clean - no need to be rebuilt!
-    fn mark_as_clean(&mut self);
+    fn set_dirty(&mut self, value: bool);
 
-    fn is_dirty(&mut self) -> bool;
+    /// TODO: documentar
+    fn is_dirty(&self) -> bool;
 
     /// Adds a widget as a child of the current widget
     ///
@@ -184,11 +189,12 @@ pub trait Widget<M> {
     /// ```
     fn offset(&mut self) -> (usize, usize);
 
+    /// TODO: documentar
     fn get_fields(
         &mut self,
     ) -> (
         bool,
-        &mut Vec<Box<dyn Widget<MessageXPTO>>>,
+        &mut Vec<Box<dyn Widget<M>>>,
         (usize, usize),
         (usize, usize),
         &Axis,
@@ -231,6 +237,9 @@ pub trait Widget<M> {
     /// ```
     fn set_size(&mut self, width: usize, height: usize);
 
+    /// TODO: documentar
+    fn set_offset(&mut self, x: usize, y: usize);
+
     /// Decomposes the layout constraints to the children of the current widget
     ///
     /// # Arguments
@@ -256,156 +265,153 @@ pub trait Widget<M> {
     ///
     /// decompose_layout_to_children(x, y, width, height);
     /// ```
-    fn decompose_layout_to_children(
+    fn build(
         &mut self,
         mut x: usize,
         mut y: usize,
         mut max_width: usize,
         mut max_height: usize,
+        id_machine: &mut IDMachine,
+        instruction_collection: &mut RenderInstructionCollection,
     ) {
-        // Assign position of widget
-        self.set_position(x, y);
-        // Assign size of widget
-        self.set_size(max_width, max_height);
+        if self.is_dirty() {
+            // Assign position of widget
+            self.set_position(x, y);
+            // Assign size of widget
+            self.set_size(max_width, max_height);
 
-        // Get children of widget
-        // Get orientation to draw children in widget
-        // Get offset vector
-        let (_, children, _, _, axis, (x_offset, y_offset)) = self.get_fields();
+            self.set_id(id_machine.fetch_id());
+            instruction_collection.replace_or_insert(self.id(), self.recipe().clone());
+            self.set_dirty(false);
 
-        // For children size
-        let mut child_size: (usize, usize);
+            // Get children of widget
+            // Get orientation to draw children in widget
+            // Get offset vector
+            let (_, children, _, _, axis, (x_offset, y_offset)) = self.get_fields();
 
-        // Update maximum dimensions according to offset
-        max_width -= 2 * x_offset;
-        max_height -= 2 * y_offset;
+            // For children size
+            let mut child_size: (usize, usize);
 
-        // Update position of first child
-        x += x_offset;
-        y += y_offset;
+            // Update maximum dimensions according to offset
+            max_width -= 2 * x_offset;
+            max_height -= 2 * y_offset;
 
-        // Traverse each child and assign their constraints
-        for child in children.iter_mut() {
-            // Get child dimensions
-            child_size = child.size();
+            // Update position of first child
+            x += x_offset;
+            y += y_offset;
 
-            // Do something to handle the dimensions assigned to the child
-            child_size.0 = child_size.0.min(max_width);
-            child_size.1 = child_size.1.min(max_height);
+            // Traverse each child and assign their constraints
+            for child in children.iter_mut() {
+                // Get child dimensions
+                child_size = child.size();
 
-            // Pass the child the assigned dimensions
-            child.decompose_layout_to_children(x, y, child_size.0, child_size.1);
+                // Do something to handle the dimensions assigned to the child
+                child_size.0 = child_size.0.min(max_width);
+                child_size.1 = child_size.1.min(max_height);
 
-            // Update the constraints and position of next child
-            match axis {
-                Axis::Horizontal => {
-                    max_width -= child_size.0;
-                    x += child_size.0
-                }
-                Axis::Vertical => {
-                    max_height -= child_size.1;
-                    y += child_size.1
-                }
-            };
+                // Pass the child the assigned dimensions
+                child.build(
+                    x,
+                    y,
+                    child_size.0,
+                    child_size.1,
+                    id_machine,
+                    instruction_collection,
+                );
+
+                // Update the constraints and position of next child
+                match axis {
+                    Axis::Horizontal => {
+                        max_width -= child_size.0;
+                        x += child_size.0
+                    }
+                    Axis::Vertical => {
+                        max_height -= child_size.1;
+                        y += child_size.1
+                    }
+                };
+            }
         }
     }
 }
 
-impl Ord for dyn Widget<MessageXPTO> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.id().cmp(&other.id())
-    }
-}
-
-impl PartialOrd for dyn Widget<MessageXPTO> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for dyn Widget<MessageXPTO> {
-    fn eq(&self, other: &Self) -> bool {
-        self.id() == other.id()
-    }
-}
-
-impl Eq for dyn Widget<MessageXPTO> {}
-
-pub struct LabelWidget {
+pub struct LabelWidget<M> {
     id: usize,
-    recipe: Vec<RenderInstruction>,
-
+    text: String,
+    color: Color,
     dirty: bool,
-    children: Vec<Box<dyn Widget<MessageXPTO>>>,
-
+    children: Vec<Box<dyn Widget<M>>>,
     position: (usize, usize),
     size: (usize, usize),
     axis: Axis,
     offset: (usize, usize),
 }
 
-impl LabelWidget {
-    fn new(id: usize, text: String, size: (u32, u32), color: Color, axis: Axis) -> LabelWidget {
+impl<M> LabelWidget<M> {
+    pub fn new(text: String, size: (usize, usize), color: Color, axis: Axis) -> LabelWidget<M> {
         LabelWidget {
-            id: id,
-            recipe: vec![
-                RenderInstruction::DrawRect {
-                    point: Point { x: 0., y: 0. },
-                    color: color,
-                    length: size.0,
-                    width: size.1,
-                },
-                RenderInstruction::DrawText {
-                    point: Point { x: 0., y: 0. },
-                    string: text,
-                },
-            ],
+            id: 0,
+            text: text,
+            color: color,
             dirty: true,
-            children: Vec::<Box<dyn Widget<MessageXPTO>>>::new(),
+            children: Vec::<Box<dyn Widget<M>>>::new(),
             position: (0, 0),
-            size: (0, 0),
+            size: size,
             axis: axis,
             offset: (0, 0),
         }
     }
 }
 
-impl Widget<MessageXPTO> for LabelWidget {
-    fn on_event(&mut self, event: Event, messages: &Queue<MessageXPTO>) {
+impl<M> Widget<M> for LabelWidget<M> {
+    fn on_event(&mut self, event: Event, messages: &Queue<M>) {
         unimplemented!();
+    }
+
+    fn set_id(&mut self, id: usize) {
+        self.id = id;
     }
 
     fn id(&self) -> usize {
         self.id
     }
 
-    fn recipe(&self) -> &Vec<RenderInstruction> {
-        &self.recipe
+    fn recipe(&self) -> Vec<RenderInstruction> {
+        vec![
+            // Label rectangle.
+            RenderInstruction::DrawRect {
+                point: Point {
+                    x: self.position.0 as f32,
+                    y: self.position.1 as f32,
+                },
+                color: self.color.clone(),
+                height: self.size.0 as u32,
+                width: self.size.1 as u32,
+            },
+            // Label Text
+            RenderInstruction::DrawText {
+                point: Point {
+                    x: self.position.0 as f32,
+                    y: (self.position.1 + self.size.1) as f32,
+                },
+                string: self.text.clone(),
+            },
+        ]
     }
 
-    fn build(&self, instruction_collection: &mut RenderInstructionCollection) {
-        instruction_collection
-            .pairs
-            .insert(self.id, self.recipe.clone());
+    fn set_dirty(&mut self, value: bool) {
+        self.dirty = value;
     }
 
-    fn mark_as_dirty(&mut self) {
-        self.dirty = true;
-    }
-
-    fn mark_as_clean(&mut self) {
-        self.dirty = false;
-    }
-
-    fn is_dirty(&mut self) -> bool {
+    fn is_dirty(&self) -> bool {
         self.dirty
     }
 
-    fn add_as_child(&mut self, child: Box<dyn Widget<MessageXPTO>>) {
+    fn add_as_child(&mut self, child: Box<dyn Widget<M>>) {
         self.children.push(child);
     }
 
-    fn get_children(&mut self) -> &mut Vec<Box<dyn Widget<MessageXPTO>>> {
+    fn get_children(&mut self) -> &mut Vec<Box<dyn Widget<M>>> {
         &mut self.children
     }
 
@@ -429,7 +435,7 @@ impl Widget<MessageXPTO> for LabelWidget {
         &mut self,
     ) -> (
         bool,
-        &mut Vec<Box<dyn Widget<MessageXPTO>>>,
+        &mut Vec<Box<dyn Widget<M>>>,
         (usize, usize),
         (usize, usize),
         &Axis,
@@ -452,4 +458,108 @@ impl Widget<MessageXPTO> for LabelWidget {
     fn set_size(&mut self, x: usize, y: usize) {
         self.size = (x, y);
     }
+
+    fn set_offset(&mut self, x: usize, y: usize) {
+        self.offset = (x, y);
+    }
+}
+
+pub struct RootWidget<M> {
+    id: usize,
+    size: (usize, usize),
+    axis: Axis,
+    dirty: bool,
+    children: Vec<Box<dyn Widget<M>>>,
+}
+
+impl<M> RootWidget<M> {
+    pub fn new(size: (usize, usize), axis: Axis) -> RootWidget<M> {
+        RootWidget {
+            id: 0,
+            size: size,
+            axis: axis,
+            dirty: true,
+            children: Vec::<Box<dyn Widget<M>>>::new(),
+        }
+    }
+}
+
+impl<M> Widget<M> for RootWidget<M> {
+    fn on_event(&mut self, event: Event, messages: &Queue<M>) {
+        unimplemented!();
+    }
+
+    fn set_id(&mut self, id: usize) {
+        self.id = id;
+    }
+
+    fn id(&self) -> usize {
+        self.id
+    }
+
+    fn recipe(&self) -> Vec<RenderInstruction> {
+        // TODO: Debater se isto deve ser usado como clear do ecrã.
+        Vec::<RenderInstruction>::new()
+    }
+
+    fn set_dirty(&mut self, value: bool) {
+        self.dirty = value;
+    }
+
+    fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+
+    fn add_as_child(&mut self, child: Box<dyn Widget<M>>) {
+        self.children.push(child);
+    }
+
+    fn get_children(&mut self) -> &mut Vec<Box<dyn Widget<M>>> {
+        &mut self.children
+    }
+
+    fn position(&mut self) -> (usize, usize) {
+        (0, 0)
+    }
+
+    fn size(&mut self) -> (usize, usize) {
+        self.size
+    }
+
+    fn axis(&mut self) -> &Axis {
+        // TODO: Ver se faz sentido ser só vertical
+        &self.axis
+    }
+
+    fn offset(&mut self) -> (usize, usize) {
+        (0, 0)
+    }
+
+    fn get_fields(
+        &mut self,
+    ) -> (
+        bool,
+        &mut Vec<Box<dyn Widget<M>>>,
+        (usize, usize),
+        (usize, usize),
+        &Axis,
+        (usize, usize),
+    ) {
+        (
+            self.dirty,
+            &mut self.children,
+            (0, 0),
+            self.size,
+            &self.axis,
+            (0, 0),
+        )
+    }
+
+    fn set_position(&mut self, _x: usize, _y: usize) {}
+
+    fn set_size(&mut self, x: usize, y: usize) {
+        self.size = (x, y);
+    }
+
+    fn set_offset(&mut self, _x: usize, _y: usize) {}
 }
