@@ -28,3 +28,22 @@ impl<T> Queue<T> {
         self.queue.first()
     }
 }
+
+pub enum MessageXPTO {
+    Abc,
+    Dfg,
+}
+
+#[derive(Clone)]
+pub struct Color {
+    pub a: u8,
+    pub r: u8,
+    pub g: u8,
+    pub b: u8
+}
+
+#[derive(Clone)]
+pub struct Point {
+    pub x: f32,
+    pub y: f32,
+}
