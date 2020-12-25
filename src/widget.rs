@@ -10,13 +10,8 @@ use crate::util::Vector2D;
 /// Enum that classifies the type of constraints that
 /// a parent imposes to its children
 pub enum ConstraintType {
-    Tight {
-        size: Vector2D,
-    },
-    Loose {
-        min: Vector2D,
-        max: Vector2D,
-    },
+    Tight { size: Vector2D },
+    Loose { min: Vector2D, max: Vector2D },
 }
 
 pub enum Axis {
@@ -445,16 +440,18 @@ impl<M> Widget<M> for LabelWidget<M> {
 pub struct RootWidget<M> {
     id: usize,
     size: Vector2D,
+    background_color: Color,
     axis: Axis,
     dirty: bool,
     children: Vec<Box<dyn Widget<M>>>,
 }
 
 impl<M> RootWidget<M> {
-    pub fn new(size: Vector2D, axis: Axis) -> RootWidget<M> {
+    pub fn new(size: Vector2D, background_color: Color, axis: Axis) -> RootWidget<M> {
         RootWidget {
             id: 0,
             size: size,
+            background_color: background_color,
             axis: axis,
             dirty: true,
             children: Vec::<Box<dyn Widget<M>>>::new(),
@@ -477,7 +474,7 @@ impl<M> Widget<M> for RootWidget<M> {
 
     fn recipe(&self) -> Vec<RenderInstruction> {
         // TODO: Debater se isto deve ser usado como clear do ecrã.
-        Vec::<RenderInstruction>::new()
+        vec![RenderInstruction::Clear { color: self.background_color }]
     }
 
     fn set_dirty(&mut self, value: bool) {

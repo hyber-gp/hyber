@@ -31,7 +31,7 @@ impl<T> Queue<T> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Color {
     pub a: u8,
     pub r: u8,

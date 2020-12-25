@@ -15,6 +15,10 @@ pub enum DrawImageOptions {
 /// Enumeration with the Render Instructions
 #[derive(Clone)]
 pub enum RenderInstruction {
+    /// Instruction to the Render that the buffer needs to be cleared
+    /// Uses a Color struct using hexadecimal alpha and rgb for coloring
+    Clear { color: Color },
+
     /// Instruction to the Render that a point needs to be drawn on the next Clipping
     /// The point should be rendered on absolute coordinates (x,y)
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
