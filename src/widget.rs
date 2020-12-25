@@ -4,21 +4,18 @@ use crate::renderer::RenderInstruction;
 use crate::renderer::RenderInstructionCollection;
 use crate::util::Color;
 use crate::util::IDMachine;
-use crate::util::Point;
 use crate::util::Queue;
+use crate::util::Vector2D;
 
 /// Enum that classifies the type of constraints that
 /// a parent imposes to its children
 pub enum ConstraintType {
     Tight {
-        x: usize,
-        y: usize,
+        size: Vector2D,
     },
     Loose {
-        min_x: usize,
-        max_x: usize,
-        min_y: usize,
-        max_y: usize,
+        min: Vector2D,
+        max: Vector2D,
     },
 }
 
@@ -141,7 +138,7 @@ pub trait Widget<M> {
     ///
     /// let (x, y) = widget.position();
     /// ```
-    fn position(&mut self) -> (usize, usize);
+    fn position(&mut self) -> Vector2D;
 
     /// Returns the size of the current widget
     ///
@@ -154,7 +151,7 @@ pub trait Widget<M> {
     ///
     /// let (width, height) = widget.size();
     /// ```
-    fn size(&mut self) -> (usize, usize);
+    fn size(&mut self) -> Vector2D;
 
     /// Returns the direction in which children of the current widget
     /// are placed (For internal use only)
@@ -187,7 +184,7 @@ pub trait Widget<M> {
     ///     }
     /// }
     /// ```
-    fn offset(&mut self) -> (usize, usize);
+    fn offset(&mut self) -> Vector2D;
 
     /// TODO: documentar
     fn get_fields(
@@ -195,10 +192,10 @@ pub trait Widget<M> {
     ) -> (
         bool,
         &mut Vec<Box<dyn Widget<M>>>,
-        (usize, usize),
-        (usize, usize),
+        Vector2D,
+        Vector2D,
         &Axis,
-        (usize, usize),
+        Vector2D,
     );
 
     /// Set the position of the topleft corner of the current widget
@@ -217,7 +214,7 @@ pub trait Widget<M> {
     ///     }
     /// }
     /// ```
-    fn set_position(&mut self, x: usize, y: usize);
+    fn set_position(&mut self, position: Vector2D);
 
     /// Sets the size of the current widget
     ///
@@ -235,10 +232,10 @@ pub trait Widget<M> {
     ///     }
     /// }
     /// ```
-    fn set_size(&mut self, width: usize, height: usize);
+    fn set_size(&mut self, size: Vector2D);
 
     /// TODO: documentar
-    fn set_offset(&mut self, x: usize, y: usize);
+    fn set_offset(&mut self, offset: Vector2D);
 
     /// Decomposes the layout constraints to the children of the current widget
     ///
@@ -267,18 +264,16 @@ pub trait Widget<M> {
     /// ```
     fn build(
         &mut self,
-        mut x: usize,
-        mut y: usize,
-        mut max_width: usize,
-        mut max_height: usize,
+        mut position: Vector2D,
+        mut max: Vector2D,
         id_machine: &mut IDMachine,
         instruction_collection: &mut RenderInstructionCollection,
     ) {
         if self.is_dirty() {
             // Assign position of widget
-            self.set_position(x, y);
+            self.set_position(position);
             // Assign size of widget
-            self.set_size(max_width, max_height);
+            self.set_size(max);
 
             self.set_id(id_machine.fetch_id());
             instruction_collection.replace_or_insert(self.id(), self.recipe().clone());
@@ -287,18 +282,16 @@ pub trait Widget<M> {
             // Get children of widget
             // Get orientation to draw children in widget
             // Get offset vector
-            let (_, children, _, _, axis, (x_offset, y_offset)) = self.get_fields();
+            let (_, children, _, _, axis, offset) = self.get_fields();
 
             // For children size
-            let mut child_size: (usize, usize);
+            let mut child_size: Vector2D;
 
             // Update maximum dimensions according to offset
-            max_width -= 2 * x_offset;
-            max_height -= 2 * y_offset;
+            max -= offset * 2;
 
             // Update position of first child
-            x += x_offset;
-            y += y_offset;
+            position += offset;
 
             // Traverse each child and assign their constraints
             for child in children.iter_mut() {
@@ -306,28 +299,20 @@ pub trait Widget<M> {
                 child_size = child.size();
 
                 // Do something to handle the dimensions assigned to the child
-                child_size.0 = child_size.0.min(max_width);
-                child_size.1 = child_size.1.min(max_height);
+                child_size = child_size.min(max);
 
                 // Pass the child the assigned dimensions
-                child.build(
-                    x,
-                    y,
-                    child_size.0,
-                    child_size.1,
-                    id_machine,
-                    instruction_collection,
-                );
+                child.build(position, child_size, id_machine, instruction_collection);
 
                 // Update the constraints and position of next child
                 match axis {
                     Axis::Horizontal => {
-                        max_width -= child_size.0;
-                        x += child_size.0
+                        max.x -= child_size.x;
+                        position.x += child_size.x;
                     }
                     Axis::Vertical => {
-                        max_height -= child_size.1;
-                        y += child_size.1
+                        max.y -= child_size.y;
+                        position.y += child_size.y;
                     }
                 };
             }
@@ -341,24 +326,24 @@ pub struct LabelWidget<M> {
     color: Color,
     dirty: bool,
     children: Vec<Box<dyn Widget<M>>>,
-    position: (usize, usize),
-    size: (usize, usize),
+    position: Vector2D,
+    size: Vector2D,
     axis: Axis,
-    offset: (usize, usize),
+    offset: Vector2D,
 }
 
 impl<M> LabelWidget<M> {
-    pub fn new(text: String, size: (usize, usize), color: Color, axis: Axis) -> LabelWidget<M> {
+    pub fn new(text: String, size: Vector2D, color: Color, axis: Axis) -> LabelWidget<M> {
         LabelWidget {
             id: 0,
             text: text,
             color: color,
             dirty: true,
             children: Vec::<Box<dyn Widget<M>>>::new(),
-            position: (0, 0),
+            position: Vector2D::new(0, 0),
             size: size,
             axis: axis,
-            offset: (0, 0),
+            offset: Vector2D::new(0, 0),
         }
     }
 }
@@ -380,20 +365,13 @@ impl<M> Widget<M> for LabelWidget<M> {
         vec![
             // Label rectangle.
             RenderInstruction::DrawRect {
-                point: Point {
-                    x: self.position.0 as f32,
-                    y: self.position.1 as f32,
-                },
+                point: self.position,
                 color: self.color.clone(),
-                height: self.size.0 as u32,
-                width: self.size.1 as u32,
+                size: self.size,
             },
             // Label Text
             RenderInstruction::DrawText {
-                point: Point {
-                    x: self.position.0 as f32,
-                    y: (self.position.1 + self.size.1) as f32,
-                },
+                point: Vector2D::new(self.position.x, self.position.y + self.size.y),
                 string: self.text.clone(),
             },
         ]
@@ -415,11 +393,11 @@ impl<M> Widget<M> for LabelWidget<M> {
         &mut self.children
     }
 
-    fn position(&mut self) -> (usize, usize) {
+    fn position(&mut self) -> Vector2D {
         self.position
     }
 
-    fn size(&mut self) -> (usize, usize) {
+    fn size(&mut self) -> Vector2D {
         self.size
     }
 
@@ -427,7 +405,7 @@ impl<M> Widget<M> for LabelWidget<M> {
         &self.axis
     }
 
-    fn offset(&mut self) -> (usize, usize) {
+    fn offset(&mut self) -> Vector2D {
         self.offset
     }
 
@@ -436,10 +414,10 @@ impl<M> Widget<M> for LabelWidget<M> {
     ) -> (
         bool,
         &mut Vec<Box<dyn Widget<M>>>,
-        (usize, usize),
-        (usize, usize),
+        Vector2D,
+        Vector2D,
         &Axis,
-        (usize, usize),
+        Vector2D,
     ) {
         (
             self.dirty,
@@ -451,29 +429,29 @@ impl<M> Widget<M> for LabelWidget<M> {
         )
     }
 
-    fn set_position(&mut self, x: usize, y: usize) {
-        self.position = (x, y);
+    fn set_position(&mut self, position: Vector2D) {
+        self.position = position;
     }
 
-    fn set_size(&mut self, x: usize, y: usize) {
-        self.size = (x, y);
+    fn set_size(&mut self, size: Vector2D) {
+        self.size = size;
     }
 
-    fn set_offset(&mut self, x: usize, y: usize) {
-        self.offset = (x, y);
+    fn set_offset(&mut self, offset: Vector2D) {
+        self.offset = offset;
     }
 }
 
 pub struct RootWidget<M> {
     id: usize,
-    size: (usize, usize),
+    size: Vector2D,
     axis: Axis,
     dirty: bool,
     children: Vec<Box<dyn Widget<M>>>,
 }
 
 impl<M> RootWidget<M> {
-    pub fn new(size: (usize, usize), axis: Axis) -> RootWidget<M> {
+    pub fn new(size: Vector2D, axis: Axis) -> RootWidget<M> {
         RootWidget {
             id: 0,
             size: size,
@@ -518,11 +496,11 @@ impl<M> Widget<M> for RootWidget<M> {
         &mut self.children
     }
 
-    fn position(&mut self) -> (usize, usize) {
-        (0, 0)
+    fn position(&mut self) -> Vector2D {
+        Vector2D::new(0, 0)
     }
 
-    fn size(&mut self) -> (usize, usize) {
+    fn size(&mut self) -> Vector2D {
         self.size
     }
 
@@ -531,8 +509,8 @@ impl<M> Widget<M> for RootWidget<M> {
         &self.axis
     }
 
-    fn offset(&mut self) -> (usize, usize) {
-        (0, 0)
+    fn offset(&mut self) -> Vector2D {
+        Vector2D::new(0, 0)
     }
 
     fn get_fields(
@@ -540,26 +518,26 @@ impl<M> Widget<M> for RootWidget<M> {
     ) -> (
         bool,
         &mut Vec<Box<dyn Widget<M>>>,
-        (usize, usize),
-        (usize, usize),
+        Vector2D,
+        Vector2D,
         &Axis,
-        (usize, usize),
+        Vector2D,
     ) {
         (
             self.dirty,
             &mut self.children,
-            (0, 0),
+            Vector2D::new(0, 0),
             self.size,
             &self.axis,
-            (0, 0),
+            Vector2D::new(0, 0),
         )
     }
 
-    fn set_position(&mut self, _x: usize, _y: usize) {}
+    fn set_position(&mut self, _position: Vector2D) {}
 
-    fn set_size(&mut self, x: usize, y: usize) {
-        self.size = (x, y);
+    fn set_size(&mut self, size: Vector2D) {
+        self.size = size;
     }
 
-    fn set_offset(&mut self, _x: usize, _y: usize) {}
+    fn set_offset(&mut self, _offset: Vector2D) {}
 }

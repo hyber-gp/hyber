@@ -1,3 +1,5 @@
+use crate::util::Vector2D;
+
 /// Structure that contains optional settings for a display window.
 /// It should be used when creating a new Display.
 /// It also provides default settings for a new Display.
@@ -324,7 +326,7 @@ pub trait Display {
     ///
     /// ``no_run
     /// impl Display for Implementor {
-    ///     fn get_size(&self) -> (usize, usize) {
+    ///     fn get_size(&self) -> Vector2D {
     ///         ...
     ///     }
     /// }
@@ -335,7 +337,7 @@ pub trait Display {
     ///
     /// let (width, height) = display.get_size();
     /// ```
-    fn get_size(&self) -> (usize, usize);
+    fn get_size(&self) -> Vector2D;
 
     /// Checks if the display is the current active one
     ///

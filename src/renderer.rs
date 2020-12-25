@@ -1,15 +1,15 @@
 use crate::event::Event;
 use crate::util::Color;
-use crate::util::Point;
 use crate::util::Queue;
+use crate::util::Vector2D;
 
 use std::collections::BTreeMap;
 
 #[derive(Clone)]
 pub enum DrawImageOptions {
     OriginalSize,
-    Resize { width: f32, height: f32 },
-    ResizeMultiplyer { mult: f32 },
+    Resize { width: usize, height: usize },
+    ResizeMultiplyer { mult: usize },
 }
 
 /// Enumeration with the Render Instructions
@@ -18,13 +18,14 @@ pub enum RenderInstruction {
     /// Instruction to the Render that a point needs to be drawn on the next Clipping
     /// The point should be rendered on absolute coordinates (x,y)
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
-    DrawPoint { point: Point, color: Color },
+    DrawPoint { point: Vector2D, color: Color },
+
     /// Instruction to the Render that a line needs to be drawn on the next Clipping
     /// The line should be rendered on absolute coordinates from (x1, y1) to (x2, y2)
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
     DrawLine {
-        point_a: Point,
-        point_b: Point,
+        point_a: Vector2D,
+        point_b: Vector2D,
         color: Color,
     },
 
@@ -33,10 +34,10 @@ pub enum RenderInstruction {
     /// radius, 'sang' start angle and 'eang' end angle.
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
     DrawArc {
-        point: Point,
-        r: f32,
-        s_ang: f32,
-        e_ang: f32,
+        point: Vector2D,
+        r: usize,
+        s_ang: usize,
+        e_ang: usize,
         color: Color,
     },
 
@@ -44,16 +45,19 @@ pub enum RenderInstruction {
     /// The circle should be rendered with center on absolute coordinates (x, y) and 'r'
     /// radius
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
-    DrawCircle { point: Point, r: f32, color: Color },
+    DrawCircle {
+        point: Vector2D,
+        r: usize,
+        color: Color,
+    },
     /// Instruction to the Render that a rectangle needs to be drawn on the next Clipping
     /// The rectangle should be rendered on absolute coordinates (x, y) with 'l' length
     /// and 'w' width
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
     DrawRect {
-        point: Point,
-        height: u32,
-        width: u32,
+        point: Vector2D,
+        size: Vector2D,
         color: Color,
     },
 
@@ -62,9 +66,9 @@ pub enum RenderInstruction {
     /// (x2, y2) and (x3, y3)
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
     DrawTriangle {
-        point_a: Point,
-        point_b: Point,
-        point_c: Point,
+        point_a: Vector2D,
+        point_b: Vector2D,
+        point_c: Vector2D,
         color: Color,
     },
 
@@ -72,14 +76,14 @@ pub enum RenderInstruction {
     /// [Doubt] The image should be rendered with center on the absolute coordinates (x, y)
     /// and with 'w' width and 'l' length
     DrawImage {
-        point: Point,
+        point: Vector2D,
         path: String,
         options: DrawImageOptions,
     },
 
     /// Instruction to the Render that some text needs to be drawn on the next Clipping
     /// [Doubt] The text should be rendered according to the text_alignment
-    DrawText { point: Point, string: String },
+    DrawText { point: Vector2D, string: String },
 }
 // Assumptions:
 //     - 2D Meshes are compounded by a list of triangles so the instructions are gonna be
@@ -87,12 +91,6 @@ pub enum RenderInstruction {
 //     Reference: https://github.com/hecrj/iced/blob/master/graphics/src/triangle.rs
 //     - Based on: https://en.wikipedia.org/wiki/Geometric_primitive
 //     - And on:   https://www.freepascal.org/docs-html/current/rtl/graph/funcdrawing.html
-
-/// Structure of an Instruction to be on the Render Instructions Collection
-pub struct Instruction {
-    pub id: u32,
-    pub instruction: RenderInstruction,
-}
 
 pub trait Renderer<D, E> {
     type Message;
@@ -179,89 +177,6 @@ pub trait Renderer<D, E> {
                 let _event = events.dequeue();
 
                 println!("{:?}", _event);
-                /* match _event {
-                    Event::Mouse(x) => match x {
-                        crate::event::Mouse::ButtonPressed(button) => match button {
-                            crate::event::MouseButton::Right => collection.replace_or_insert(
-                                0,
-                                vec![
-                                    // Add instructions to the widget's vectors
-                                    RenderInstruction::DrawRect {
-                                        point: Point { x: 100.0, y: 10.0 },
-                                        height: 200,
-                                        width: 50,
-                                        color: Color {
-                                            a: 0xff,
-                                            r: 0x00,
-                                            g: 0x00,
-                                            b: 0xff,
-                                        },
-                                    },
-                                    RenderInstruction::DrawText {
-                                        point: Point { x: 140.0, y: 50.0 },
-                                        string: String::from("Right Click"),
-                                    },
-                                ],
-                            ),
-
-                            crate::event::MouseButton::Left => collection.replace_or_insert(
-                                0,
-                                vec![
-                                    // Add instructions to the widget's vectors
-                                    RenderInstruction::DrawRect {
-                                        point: Point { x: 10.0, y: 100.0 },
-                                        length: 200,
-                                        width: 50,
-                                        color: Color {
-                                            a: 0xff,
-                                            r: 0x00,
-                                            g: 0x00,
-                                            b: 0xff,
-                                        },
-                                    },
-                                    RenderInstruction::DrawText {
-                                        point: Point { x: 50.0, y: 140.0 },
-                                        string: String::from("Left Click"),
-                                    },
-                                ],
-                            ),
-                            _ => (),
-                        },
-                        _ => (),
-                    },
-                    Event::Keyboard(key) => match key {
-                        crate::event::Keyboard::KeyPressed {
-                            key_code,
-                            modifiers,
-                        } => collection.replace_or_insert(
-                            1,
-                            vec![
-                                // Add instructions to the widget's vectors
-                                RenderInstruction::DrawRect {
-                                    point: Point { x: 10.0, y: 10.0 },
-                                    length: 120,
-                                    width: 50,
-                                    color: Color {
-                                        a: 0xff,
-                                        r: 0xff,
-                                        g: 0x00,
-                                        b: 0xff,
-                                    },
-                                },
-                                RenderInstruction::DrawText {
-                                    point: Point { x: 40.0, y: 50.0 },
-                                    string: String::from(format!("{:?}", key_code)),
-                                },
-                            ],
-                        ),
-                        crate::event::Keyboard::KeyReleased {
-                            key_code,
-                            modifiers,
-                        } => collection.remove(1),
-                        _ => (),
-                    },
-                    _ => (),
-                }*/
             }
             // 2º chamar on event na arvore de widgets
             // estes eventos alterarão a collection.

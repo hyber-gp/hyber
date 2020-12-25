@@ -65,10 +65,10 @@ pub enum Mouse {
     ///The mouse cursor moved
     CursorMoved {
         ///The X coordinate of the mouse position
-        x: f32,
+        x: usize,
 
         ///The Y coordinate of the mouse position
-        y: f32,
+        y: usize,
     },
 
     ///The mouse wheel was scrolled
@@ -97,10 +97,10 @@ pub enum ScrollDelta {
     /// A pixel-based scroll movement
     Pixels {
         /// The number of horizontal pixels scrolled
-        x: f32,
+        x: usize,
 
         /// The number of vertical pixels scrolled
-        y: f32,
+        y: usize,
     },
 }
 #[derive(Debug)]
