@@ -318,7 +318,9 @@ pub trait Widget<M> {
 pub struct LabelWidget<M> {
     id: usize,
     text: String,
-    color: Color,
+    font_size: usize,
+    background_color: Color,
+    foreground_color: Color,
     dirty: bool,
     children: Vec<Box<dyn Widget<M>>>,
     position: Vector2D,
@@ -328,11 +330,20 @@ pub struct LabelWidget<M> {
 }
 
 impl<M> LabelWidget<M> {
-    pub fn new(text: String, size: Vector2D, color: Color, axis: Axis) -> LabelWidget<M> {
+    pub fn new(
+        text: String,
+        size: Vector2D,
+        font_size: usize,
+        background_color: Color,
+        foreground_color: Color,
+        axis: Axis,
+    ) -> LabelWidget<M> {
         LabelWidget {
             id: 0,
             text: text,
-            color: color,
+            font_size: font_size,
+            background_color: background_color,
+            foreground_color: foreground_color,
             dirty: true,
             children: Vec::<Box<dyn Widget<M>>>::new(),
             position: Vector2D::new(0, 0),
@@ -361,12 +372,14 @@ impl<M> Widget<M> for LabelWidget<M> {
             // Label rectangle.
             RenderInstruction::DrawRect {
                 point: self.position,
-                color: self.color.clone(),
+                color: self.background_color.clone(),
                 size: self.size,
             },
             // Label Text
             RenderInstruction::DrawText {
                 point: Vector2D::new(self.position.x, self.position.y + self.size.y),
+                color: self.foreground_color,
+                font_size: self.font_size,
                 string: self.text.clone(),
             },
         ]
@@ -474,7 +487,9 @@ impl<M> Widget<M> for RootWidget<M> {
 
     fn recipe(&self) -> Vec<RenderInstruction> {
         // TODO: Debater se isto deve ser usado como clear do ecrã.
-        vec![RenderInstruction::Clear { color: self.background_color }]
+        vec![RenderInstruction::Clear {
+            color: self.background_color,
+        }]
     }
 
     fn set_dirty(&mut self, value: bool) {

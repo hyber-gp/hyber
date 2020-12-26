@@ -87,7 +87,7 @@ pub enum RenderInstruction {
 
     /// Instruction to the Render that some text needs to be drawn on the next Clipping
     /// [Doubt] The text should be rendered according to the text_alignment
-    DrawText { point: Vector2D, string: String },
+    DrawText { point: Vector2D, font_size: usize, string: String, color: Color },
 }
 // Assumptions:
 //     - 2D Meshes are compounded by a list of triangles so the instructions are gonna be
