@@ -1,9 +1,13 @@
 use crate::event::Event;
 use crate::util::Color;
+use crate::util::IDMachine;
 use crate::util::Queue;
 use crate::util::Vector2D;
+use crate::widget::Widget;
 
+use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::rc::Weak;
 
 #[derive(Clone)]
 pub enum DrawImageOptions {
@@ -87,17 +91,54 @@ pub enum RenderInstruction {
 
     /// Instruction to the Render that some text needs to be drawn on the next Clipping
     /// [Doubt] The text should be rendered according to the text_alignment
-    DrawText { point: Vector2D, font_size: usize, string: String, color: Color },
+    DrawText {
+        point: Vector2D,
+        font_size: usize,
+        string: String,
+        color: Color,
+    },
 }
+
+pub trait Message: MessageClone {
+    fn update(&self);
+    
+    fn set_event(&mut self, event: Event);
+}
+
+// Splitting AnimalClone into its own trait allows us to provide a blanket
+// implementation for all compatible types, without having to implement the
+// rest of Animal.  In this case, we implement it for all types that have
+// 'static lifetime (*i.e.* they don't contain non-'static pointers), and
+// implement both Animal and Clone.  Don't ask me how the compiler resolves
+// implementing AnimalClone for Animal when Animal requires AnimalClone; I
+// have *no* idea why this works.
+pub trait MessageClone {
+    fn clone_box(&self) -> Box<dyn Message>;
+}
+
+impl<T> MessageClone for T
+where
+    T: 'static + Message + Clone,
+{
+    fn clone_box(&self) -> Box<dyn Message> {
+        Box::new(self.clone())
+    }
+}
+
+// We can now implement Clone manually by forwarding to clone_box.
+impl Clone for Box<dyn Message> {
+    fn clone(&self) -> Box<dyn Message> {
+        self.clone_box()
+    }
+}
+
 // Assumptions:
 //     - 2D Meshes are compounded by a list of triangles so the instructions are gonna be
 //     multiple DrawTriangleAbs intructions
 //     Reference: https://github.com/hecrj/iced/blob/master/graphics/src/triangle.rs
 //     - Based on: https://en.wikipedia.org/wiki/Geometric_primitive
 //     - And on:   https://www.freepascal.org/docs-html/current/rtl/graph/funcdrawing.html
-
 pub trait Renderer<D, E> {
-    type Message;
     /// This function is needed to map the events detected (Window, Keyboard, Mouse) into hyber events.
     /// We recommend user to define T as an enum.
     ///
@@ -138,8 +179,8 @@ pub trait Renderer<D, E> {
     ///
     /// # Arguments
     /// No args
-    fn create_message_queue(&mut self) -> Queue<Self::Message> {
-        let queue: Queue<Self::Message> = Queue::new();
+    fn create_message_queue(&mut self) -> Queue<Box<dyn Message>> {
+        let queue: Queue<Box<dyn Message>> = Queue::new();
         queue
     }
     /// This function is used to detect the system events and map them into hyber events using map_events function.
@@ -170,27 +211,36 @@ pub trait Renderer<D, E> {
     fn event_loop(
         &mut self,
         mut events: Queue<Event>,
-        mut messages: Queue<Self::Message>,
+        mut messages: Queue<Box<dyn Message>>,
+        root_ptr: Weak<RefCell<dyn Widget>>,
         display: &mut D,
+        display_size: Vector2D,
+        id_machine: &mut IDMachine,
         collection: &mut RenderInstructionCollection,
     ) {
         loop {
             // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
             Self::detect_display_events(&mut events, display);
-            if events.lenght() != 0 {
-                let _event = events.dequeue();
 
-                println!("{:?}", _event);
-            }
             // 2º chamar on event na arvore de widgets
             // estes eventos alterarão a collection.
+            if let Some(root) = root_ptr.upgrade() {
+                for event in events.queue.drain(..) {
+                    root.borrow_mut().on_event(event, &mut messages);
+                }
 
-            // 3º desenhar
-            self.draw_collection(collection, display);
-            // 4º percorrer as mensagens e fazer update
-            /*for _message in messages.queue.drain(..){
+                root.borrow_mut()
+                    .build(Vector2D::new(0, 0), display_size, id_machine, collection);
 
-            }*/
+                // 3º desenhar
+                self.draw_collection(collection, display);
+                // 4º percorrer as mensagens e fazer update
+                for message in messages.queue.drain(..) {
+                    message.update();
+                }
+            } else {
+                println!("Falhou!");
+            }
         }
     }
 

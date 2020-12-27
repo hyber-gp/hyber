@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum KeyCode {
     /// The '1' key over the letters.
     Key1,

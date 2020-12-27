@@ -1,11 +1,17 @@
+use crate::event;
 use crate::event::Event;
+use crate::key_code::KeyCode;
 use crate::renderer::DrawImageOptions;
+use crate::renderer::Message;
 use crate::renderer::RenderInstruction;
 use crate::renderer::RenderInstructionCollection;
 use crate::util::Color;
 use crate::util::IDMachine;
 use crate::util::Queue;
 use crate::util::Vector2D;
+
+use std::cell::RefCell;
+use std::rc::Weak;
 
 /// Enum that classifies the type of constraints that
 /// a parent imposes to its children
@@ -14,6 +20,7 @@ pub enum ConstraintType {
     Loose { min: Vector2D, max: Vector2D },
 }
 
+#[derive(Clone)]
 pub enum Axis {
     Horizontal,
     Vertical,
@@ -22,7 +29,7 @@ pub enum Axis {
 /// TODO: DOCUMENTAR ISTO
 /// D é Display
 /// M é Message
-pub trait Widget<M> {
+pub trait Widget {
     /// @diogosemedo
     /// This function is needed to detect if the event is being done on this widget, update the state of
     /// the widget based on event and place a message in the message queue.
@@ -33,7 +40,7 @@ pub trait Widget<M> {
     /// # Arguments
     /// * `event` - an hyber event
     /// * `messages` - queue of messages
-    fn on_event(&mut self, event: Event, messages: &Queue<M>);
+    fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>);
 
     /// TODO: documentar
     fn set_id(&mut self, id: usize);
@@ -44,22 +51,6 @@ pub trait Widget<M> {
     /// it returns the collection of Instructions that tell the
     /// renderer how to draw this widget.
     fn recipe(&self) -> Vec<RenderInstruction>;
-
-    /// @tofulynx
-    /// recursive function
-    /// 3 steps:
-    /// - add recipe() instructions to display's tree view
-    /// - mark_as_clean()
-    /// - call build() on children
-    /// @tofulynx
-    /// marks widget and its children as dirty - they need to be rebuilt!
-    fn mark_as_dirty(&mut self, instruction_collection: &mut RenderInstructionCollection) {
-        self.set_dirty(true);
-
-        for child in self.get_children().iter_mut() {
-            child.mark_as_dirty(instruction_collection);
-        }
-    }
 
     /// @tofulynx
     /// For internal use only. Called by build(). marks widget as clean - no need to be rebuilt!
@@ -83,7 +74,7 @@ pub trait Widget<M> {
     ///
     /// parent.add_as_child(child);
     /// ```
-    fn add_as_child(&mut self, child: Box<dyn Widget<M>>);
+    fn add_as_child(&mut self, child: Weak<RefCell<dyn Widget>>);
 
     /// Returns a collection of children of the current widget
     ///
@@ -101,7 +92,7 @@ pub trait Widget<M> {
     ///
     /// let children = parent.children();
     /// ```
-    fn get_children(&mut self) -> &mut Vec<Box<dyn Widget<M>>>;
+    fn get_children(&mut self) -> &mut Vec<Weak<RefCell<dyn Widget>>>;
 
     /// Sets a widget as the parent of the current widget (For internal use only)
     ///
@@ -120,7 +111,7 @@ pub trait Widget<M> {
     ///     }
     /// }
     /// ```
-    // fn set_as_parent(&mut self, parent: &mut Box<dyn Widget<M>>);
+    // fn set_as_parent(&mut self, parent: &mut Weak<RefCell<dyn Widget>>);
 
     /// Returns the position of the topleft corner of the current widget
     ///
@@ -186,7 +177,7 @@ pub trait Widget<M> {
         &mut self,
     ) -> (
         bool,
-        &mut Vec<Box<dyn Widget<M>>>,
+        &mut Vec<Weak<RefCell<dyn Widget>>>,
         Vector2D,
         Vector2D,
         &Axis,
@@ -270,34 +261,45 @@ pub trait Widget<M> {
             // Assign size of widget
             self.set_size(max);
 
+            instruction_collection.remove(self.id());
             self.set_id(id_machine.fetch_id());
             instruction_collection.replace_or_insert(self.id(), self.recipe().clone());
             self.set_dirty(false);
+        }
 
-            // Get children of widget
-            // Get orientation to draw children in widget
-            // Get offset vector
-            let (_, children, _, _, axis, offset) = self.get_fields();
+        // Get children of widget
+        // Get orientation to draw children in widget
+        // Get offset vector
+        let (_, children, _, _, axis, offset) = self.get_fields();
 
-            // For children size
-            let mut child_size: Vector2D;
+        // For children size
+        let mut child_size: Vector2D;
 
-            // Update maximum dimensions according to offset
-            max -= offset * 2;
+        // Update maximum dimensions according to offset
+        max -= offset * 2;
 
-            // Update position of first child
-            position += offset;
+        // Update position of first child
+        position += offset;
 
-            // Traverse each child and assign their constraints
-            for child in children.iter_mut() {
+        let mut children_dirty = false;
+        // Traverse each child and assign their constraints
+        for value in children.iter_mut() {
+            if let Some(child) = value.upgrade() {
+                if children_dirty {
+                    child.borrow_mut().set_dirty(true);
+                } else if child.borrow_mut().is_dirty() {
+                    children_dirty = true;
+                }
                 // Get child dimensions
-                child_size = child.size();
+                child_size = child.borrow_mut().size();
 
                 // Do something to handle the dimensions assigned to the child
                 child_size = child_size.min(max);
 
                 // Pass the child the assigned dimensions
-                child.build(position, child_size, id_machine, instruction_collection);
+                child
+                    .borrow_mut()
+                    .build(position, child_size, id_machine, instruction_collection);
 
                 // Update the constraints and position of next child
                 match axis {
@@ -315,21 +317,22 @@ pub trait Widget<M> {
     }
 }
 
-pub struct LabelWidget<M> {
+#[derive(Clone)]
+pub struct LabelWidget {
     id: usize,
     text: String,
     font_size: usize,
     background_color: Color,
     foreground_color: Color,
     dirty: bool,
-    children: Vec<Box<dyn Widget<M>>>,
+    children: Vec<Weak<RefCell<dyn Widget>>>,
     position: Vector2D,
     size: Vector2D,
     axis: Axis,
     offset: Vector2D,
 }
 
-impl<M> LabelWidget<M> {
+impl LabelWidget {
     pub fn new(
         text: String,
         size: Vector2D,
@@ -337,7 +340,7 @@ impl<M> LabelWidget<M> {
         background_color: Color,
         foreground_color: Color,
         axis: Axis,
-    ) -> LabelWidget<M> {
+    ) -> LabelWidget {
         LabelWidget {
             id: 0,
             text: text,
@@ -345,19 +348,22 @@ impl<M> LabelWidget<M> {
             background_color: background_color,
             foreground_color: foreground_color,
             dirty: true,
-            children: Vec::<Box<dyn Widget<M>>>::new(),
+            children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
             position: Vector2D::new(0, 0),
             size: size,
             axis: axis,
             offset: Vector2D::new(0, 0),
         }
     }
+
+    pub fn set_text(&mut self, text: String) {
+        self.text = text;
+        self.dirty = true;
+    }
 }
 
-impl<M> Widget<M> for LabelWidget<M> {
-    fn on_event(&mut self, event: Event, messages: &Queue<M>) {
-        unimplemented!();
-    }
+impl Widget for LabelWidget {
+    fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {}
 
     fn set_id(&mut self, id: usize) {
         self.id = id;
@@ -393,11 +399,11 @@ impl<M> Widget<M> for LabelWidget<M> {
         self.dirty
     }
 
-    fn add_as_child(&mut self, child: Box<dyn Widget<M>>) {
+    fn add_as_child(&mut self, child: Weak<RefCell<dyn Widget>>) {
         self.children.push(child);
     }
 
-    fn get_children(&mut self) -> &mut Vec<Box<dyn Widget<M>>> {
+    fn get_children(&mut self) -> &mut Vec<Weak<RefCell<dyn Widget>>> {
         &mut self.children
     }
 
@@ -421,7 +427,7 @@ impl<M> Widget<M> for LabelWidget<M> {
         &mut self,
     ) -> (
         bool,
-        &mut Vec<Box<dyn Widget<M>>>,
+        &mut Vec<Weak<RefCell<dyn Widget>>>,
         Vector2D,
         Vector2D,
         &Axis,
@@ -442,6 +448,7 @@ impl<M> Widget<M> for LabelWidget<M> {
     }
 
     fn set_size(&mut self, size: Vector2D) {
+        self.dirty = true;
         self.size = size;
     }
 
@@ -450,31 +457,90 @@ impl<M> Widget<M> for LabelWidget<M> {
     }
 }
 
-pub struct RootWidget<M> {
+#[derive(Clone)]
+pub struct RootWidget {
     id: usize,
     size: Vector2D,
     background_color: Color,
+    message_incremented: Box<dyn Message>,
+    message_decremented: Box<dyn Message>,
+    message_resized: Box<dyn Message>,
     axis: Axis,
     dirty: bool,
-    children: Vec<Box<dyn Widget<M>>>,
+    children: Vec<Weak<RefCell<dyn Widget>>>,
 }
 
-impl<M> RootWidget<M> {
-    pub fn new(size: Vector2D, background_color: Color, axis: Axis) -> RootWidget<M> {
+impl RootWidget {
+    pub fn new(
+        size: Vector2D,
+        background_color: Color,
+        axis: Axis,
+        message_incremented: Box<dyn Message>,
+        message_decremented: Box<dyn Message>,
+        message_resized: Box<dyn Message>,
+    ) -> RootWidget {
         RootWidget {
             id: 0,
             size: size,
             background_color: background_color,
             axis: axis,
+            message_incremented: message_incremented,
+            message_decremented: message_decremented,
+            message_resized: message_resized,
             dirty: true,
-            children: Vec::<Box<dyn Widget<M>>>::new(),
+            children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
         }
     }
 }
 
-impl<M> Widget<M> for RootWidget<M> {
-    fn on_event(&mut self, event: Event, messages: &Queue<M>) {
-        unimplemented!();
+impl Widget for RootWidget {
+    fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
+        match event {
+            event::Event::Keyboard(event::Keyboard::KeyPressed {
+                key_code: KeyCode::I,
+                modifiers:
+                    event::ModifiersState {
+                        shift: false,
+                        control: false,
+                        alt: false,
+                        logo: false,
+                    },
+            }) => {
+                println!("{:?} -> Entrou!", event);
+                let mut message = self.message_incremented.clone();
+                message.set_event(event);
+                messages.enqueue(message);
+            }
+            event::Event::Keyboard(event::Keyboard::KeyPressed {
+                key_code: KeyCode::D,
+                modifiers:
+                    event::ModifiersState {
+                        shift: false,
+                        control: false,
+                        alt: false,
+                        logo: false,
+                    },
+            }) => {
+                println!("{:?} -> Entrou!", event);
+                let mut message = self.message_decremented.clone();
+                message.set_event(event);
+                messages.enqueue(message);
+            }
+            event::Event::Mouse(event::Mouse::CursorMoved { x, y }) => {
+                println!("{:?} -> Entrou!", event);
+                let mut message = self.message_resized.clone();
+                message.set_event(event);
+                messages.enqueue(message);
+            }
+            _ => {
+                println!("{:?} -> Passou root!", event);
+                for value in self.children.iter_mut() {
+                    if let Some(child) = value.upgrade() {
+                        child.borrow_mut().on_event(event, messages);
+                    }
+                }
+            }
+        }
     }
 
     fn set_id(&mut self, id: usize) {
@@ -500,11 +566,11 @@ impl<M> Widget<M> for RootWidget<M> {
         self.dirty
     }
 
-    fn add_as_child(&mut self, child: Box<dyn Widget<M>>) {
+    fn add_as_child(&mut self, child: Weak<RefCell<dyn Widget>>) {
         self.children.push(child);
     }
 
-    fn get_children(&mut self) -> &mut Vec<Box<dyn Widget<M>>> {
+    fn get_children(&mut self) -> &mut Vec<Weak<RefCell<dyn Widget>>> {
         &mut self.children
     }
 
@@ -529,7 +595,7 @@ impl<M> Widget<M> for RootWidget<M> {
         &mut self,
     ) -> (
         bool,
-        &mut Vec<Box<dyn Widget<M>>>,
+        &mut Vec<Weak<RefCell<dyn Widget>>>,
         Vector2D,
         Vector2D,
         &Axis,
@@ -548,8 +614,140 @@ impl<M> Widget<M> for RootWidget<M> {
     fn set_position(&mut self, _position: Vector2D) {}
 
     fn set_size(&mut self, size: Vector2D) {
+        self.dirty = true;
         self.size = size;
     }
 
     fn set_offset(&mut self, _offset: Vector2D) {}
+}
+
+#[derive(Clone)]
+pub struct IconWidget {
+    id: usize,
+    path: String,
+    options: DrawImageOptions,
+    background_color: Color,
+    dirty: bool,
+    children: Vec<Weak<RefCell<dyn Widget>>>,
+    position: Vector2D,
+    size: Vector2D,
+    axis: Axis,
+    offset: Vector2D,
+}
+
+impl IconWidget {
+    pub fn new(
+        path: String,
+        size: Vector2D,
+        options: DrawImageOptions,
+        background_color: Color,
+        axis: Axis,
+    ) -> IconWidget {
+        IconWidget {
+            id: 0,
+            path: path,
+            options: DrawImageOptions::OriginalSize,
+            background_color: background_color,
+            dirty: true,
+            children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
+            position: Vector2D::new(0, 0),
+            size: size,
+            axis: axis,
+            offset: Vector2D::new(0, 0),
+        }
+    }
+}
+
+impl Widget for IconWidget {
+    fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {}
+
+    fn set_id(&mut self, id: usize) {
+        self.id = id;
+    }
+
+    fn id(&self) -> usize {
+        self.id
+    }
+
+    fn recipe(&self) -> Vec<RenderInstruction> {
+        vec![
+            // Icon rectangle.
+            RenderInstruction::DrawRect {
+                point: self.position,
+                color: self.background_color.clone(),
+                size: self.size,
+            },
+            // Icon Image
+            RenderInstruction::DrawImage {
+                point: self.position, // todo: CHANGE after testing
+                path: self.path.clone(),
+                options: self.options.clone(),
+            },
+        ]
+    }
+
+    fn set_dirty(&mut self, value: bool) {
+        self.dirty = value;
+    }
+
+    fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+
+    fn add_as_child(&mut self, child: Weak<RefCell<dyn Widget>>) {
+        self.children.push(child);
+    }
+
+    fn get_children(&mut self) -> &mut Vec<Weak<RefCell<dyn Widget>>> {
+        &mut self.children
+    }
+
+    fn position(&mut self) -> Vector2D {
+        self.position
+    }
+
+    fn size(&mut self) -> Vector2D {
+        self.size
+    }
+
+    fn axis(&mut self) -> &Axis {
+        &self.axis
+    }
+
+    fn offset(&mut self) -> Vector2D {
+        self.offset
+    }
+
+    fn get_fields(
+        &mut self,
+    ) -> (
+        bool,
+        &mut Vec<Weak<RefCell<dyn Widget>>>,
+        Vector2D,
+        Vector2D,
+        &Axis,
+        Vector2D,
+    ) {
+        (
+            self.dirty,
+            &mut self.children,
+            self.position,
+            self.size,
+            &self.axis,
+            self.offset,
+        )
+    }
+
+    fn set_position(&mut self, position: Vector2D) {
+        self.position = position;
+    }
+
+    fn set_size(&mut self, size: Vector2D) {
+        self.dirty = true;
+        self.size = size;
+    }
+
+    fn set_offset(&mut self, offset: Vector2D) {
+        self.offset = offset;
+    }
 }

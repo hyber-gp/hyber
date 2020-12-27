@@ -1,5 +1,5 @@
 use crate::key_code::KeyCode;
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 ///The current state of the keyboard modifiers
 pub struct ModifiersState {
     /// Whether a shift key is pressed
@@ -27,7 +27,7 @@ impl ModifiersState {
         shift && control && alt && logo
     }
 }
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 ///A keyboard event
 pub enum Keyboard {
     ///A keyboard key was pressed
@@ -48,7 +48,7 @@ pub enum Keyboard {
     ///The keyboard modifiers have changed
     ModifiersChanged(ModifiersState),
 }
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 ///A mouse event
 pub enum Mouse {
     ///A mouse button was pressed
@@ -77,7 +77,7 @@ pub enum Mouse {
         delta: ScrollDelta,
     },
 }
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 ///The button of a mouse
 pub enum MouseButton {
     /// The left mouse button.
@@ -92,7 +92,7 @@ pub enum MouseButton {
     /// Some other button.
     Other(u8),
 }
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum ScrollDelta {
     /// A pixel-based scroll movement
     Pixels {
@@ -103,7 +103,7 @@ pub enum ScrollDelta {
         y: usize,
     },
 }
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 ///A window event
 pub enum Window {
     ///The window was rezised
@@ -115,7 +115,7 @@ pub enum Window {
         height: u32,
     },
 }
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 ///Representation of an user interface event
 pub enum Event {
     /// A keyboard event (eg. KeyPressed, KeyRelease...)
