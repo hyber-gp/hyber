@@ -506,7 +506,6 @@ impl Widget for RootWidget {
                         logo: false,
                     },
             }) => {
-                println!("{:?} -> Entrou!", event);
                 let mut message = self.message_incremented.clone();
                 message.set_event(event);
                 messages.enqueue(message);
@@ -521,19 +520,16 @@ impl Widget for RootWidget {
                         logo: false,
                     },
             }) => {
-                println!("{:?} -> Entrou!", event);
                 let mut message = self.message_decremented.clone();
                 message.set_event(event);
                 messages.enqueue(message);
             }
             event::Event::Mouse(event::Mouse::CursorMoved { x, y }) => {
-                println!("{:?} -> Entrou!", event);
                 let mut message = self.message_resized.clone();
                 message.set_event(event);
                 messages.enqueue(message);
             }
             _ => {
-                println!("{:?} -> Passou root!", event);
                 for value in self.children.iter_mut() {
                     if let Some(child) = value.upgrade() {
                         child.borrow_mut().on_event(event, messages);

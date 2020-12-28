@@ -101,7 +101,6 @@ pub enum RenderInstruction {
 
 pub trait Message: MessageClone {
     fn update(&self);
-    
     fn set_event(&mut self, event: Event);
 }
 
@@ -238,8 +237,6 @@ pub trait Renderer<D, E> {
                 for message in messages.queue.drain(..) {
                     message.update();
                 }
-            } else {
-                println!("Falhou!");
             }
         }
     }
