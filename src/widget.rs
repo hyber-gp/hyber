@@ -9,6 +9,7 @@ use crate::util::Vector2D;
 use std::cell::RefCell;
 use std::rc::Weak;
 
+pub mod list_view;
 pub mod grid_view;
 pub mod icon;
 pub mod label;
