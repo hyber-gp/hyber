@@ -61,16 +61,16 @@ impl Color {
 
 #[derive(Clone, Copy)]
 pub struct Vector2D {
-    pub x: usize,
-    pub y: usize,
+    pub x: f64,
+    pub y: f64,
 }
 
 impl Vector2D {
-    pub fn new(x: usize, y: usize) -> Self {
+    pub fn new(x: f64, y: f64) -> Self {
         Self { x: x, y: y }
     }
 
-    pub fn from_tuple(tuple: (usize, usize)) -> Self {
+    pub fn from_tuple(tuple: (f64, f64)) -> Self {
         Self {
             x: tuple.0,
             y: tuple.1,
@@ -96,10 +96,10 @@ impl Add for Vector2D {
     }
 }
 
-impl Add<usize> for Vector2D {
+impl Add<f64> for Vector2D {
     type Output = Self;
 
-    fn add(self, other: usize) -> Self {
+    fn add(self, other: f64) -> Self {
         Self {
             x: self.x + other,
             y: self.y + other,
@@ -116,8 +116,8 @@ impl AddAssign for Vector2D {
     }
 }
 
-impl AddAssign<usize> for Vector2D {
-    fn add_assign(&mut self, other: usize) {
+impl AddAssign<f64> for Vector2D {
+    fn add_assign(&mut self, other: f64) {
         *self = Self {
             x: self.x + other,
             y: self.y + other,
@@ -136,10 +136,10 @@ impl Sub for Vector2D {
     }
 }
 
-impl Sub<usize> for Vector2D {
+impl Sub<f64> for Vector2D {
     type Output = Self;
 
-    fn sub(self, other: usize) -> Self::Output {
+    fn sub(self, other: f64) -> Self::Output {
         Self {
             x: self.x - other,
             y: self.y - other,
@@ -156,8 +156,8 @@ impl SubAssign for Vector2D {
     }
 }
 
-impl SubAssign<usize> for Vector2D {
-    fn sub_assign(&mut self, other: usize) {
+impl SubAssign<f64> for Vector2D {
+    fn sub_assign(&mut self, other: f64) {
         *self = Self {
             x: self.x - other,
             y: self.y - other,
@@ -176,10 +176,10 @@ impl Mul for Vector2D {
     }
 }
 
-impl Mul<usize> for Vector2D {
+impl Mul<f64> for Vector2D {
     type Output = Self;
 
-    fn mul(self, other: usize) -> Self::Output {
+    fn mul(self, other: f64) -> Self::Output {
         Self {
             x: self.x * other,
             y: self.y * other,
@@ -196,8 +196,8 @@ impl MulAssign for Vector2D {
     }
 }
 
-impl MulAssign<usize> for Vector2D {
-    fn mul_assign(&mut self, other: usize) {
+impl MulAssign<f64> for Vector2D {
+    fn mul_assign(&mut self, other: f64) {
         *self = Self {
             x: self.x * other,
             y: self.y * other,
@@ -216,10 +216,10 @@ impl Div for Vector2D {
     }
 }
 
-impl Div<usize> for Vector2D {
+impl Div<f64> for Vector2D {
     type Output = Self;
 
-    fn div(self, other: usize) -> Self::Output {
+    fn div(self, other: f64) -> Self::Output {
         Self {
             x: self.x / other,
             y: self.y / other,
@@ -236,8 +236,8 @@ impl DivAssign for Vector2D {
     }
 }
 
-impl DivAssign<usize> for Vector2D {
-    fn div_assign(&mut self, other: usize) {
+impl DivAssign<f64> for Vector2D {
+    fn div_assign(&mut self, other: f64) {
         *self = Self {
             x: self.x / other,
             y: self.y / other,

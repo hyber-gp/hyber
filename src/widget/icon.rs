@@ -1,7 +1,7 @@
 use crate::event::Event;
 use crate::renderer::{DrawImageOptions, Message, RenderInstruction};
 use crate::util::{Color, Queue, Vector2D};
-use crate::widget::{Axis, Widget};
+use crate::widget::{Layout, Widget};
 
 use std::cell::RefCell;
 use std::rc::Weak;
@@ -16,7 +16,8 @@ pub struct IconWidget {
     children: Vec<Weak<RefCell<dyn Widget>>>,
     position: Vector2D,
     size: Vector2D,
-    axis: Axis,
+    original_size: Vector2D,
+    layout: Layout,
     offset: Vector2D,
 }
 
@@ -26,7 +27,6 @@ impl IconWidget {
         size: Vector2D,
         options: DrawImageOptions,
         background_color: Color,
-        axis: Axis,
     ) -> IconWidget {
         IconWidget {
             id: 0,
@@ -35,10 +35,11 @@ impl IconWidget {
             background_color: background_color,
             dirty: true,
             children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
-            position: Vector2D::new(0, 0),
+            position: Vector2D::new(0., 0.),
             size: size,
-            axis: axis,
-            offset: Vector2D::new(0, 0),
+            original_size: size,
+            layout: Layout::None,
+            offset: Vector2D::new(0., 0.),
         }
     }
 }
@@ -95,8 +96,12 @@ impl Widget for IconWidget {
         self.size
     }
 
-    fn axis(&mut self) -> &Axis {
-        &self.axis
+    fn original_size(&mut self) -> Vector2D {
+        self.original_size
+    }
+
+    fn layout(&mut self) -> &Layout {
+        &self.layout
     }
 
     fn offset(&mut self) -> Vector2D {
@@ -110,7 +115,8 @@ impl Widget for IconWidget {
         &mut Vec<Weak<RefCell<dyn Widget>>>,
         Vector2D,
         Vector2D,
-        &Axis,
+        Vector2D,
+        &Layout,
         Vector2D,
     ) {
         (
@@ -118,7 +124,8 @@ impl Widget for IconWidget {
             &mut self.children,
             self.position,
             self.size,
-            &self.axis,
+            self.original_size,
+            &self.layout,
             self.offset,
         )
     }
@@ -130,6 +137,11 @@ impl Widget for IconWidget {
     fn set_size(&mut self, size: Vector2D) {
         self.dirty = true;
         self.size = size;
+    }
+
+    fn set_original_size(&mut self, size: Vector2D) {
+        self.dirty = true;
+        self.original_size = size;
     }
 
     fn set_offset(&mut self, offset: Vector2D) {

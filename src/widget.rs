@@ -9,6 +9,7 @@ use crate::util::Vector2D;
 use std::cell::RefCell;
 use std::rc::Weak;
 
+pub mod grid_view;
 pub mod icon;
 pub mod label;
 pub mod root;
@@ -20,6 +21,22 @@ pub enum ConstraintType {
     Loose { min: Vector2D, max: Vector2D },
 }
 
+// TODO: Ver isto
+pub enum Num {
+    Num(usize),
+    Infinity,
+}
+
+/// TODO: Documentar
+#[derive(Clone)]
+pub enum Layout {
+    Box(Axis),
+    Grid(Axis, usize),
+    Sliver(Axis),
+    None,
+}
+
+/// TODO: Documentar
 #[derive(Clone)]
 pub enum Axis {
     Horizontal,
@@ -139,8 +156,20 @@ pub trait Widget {
     /// ```
     fn size(&mut self) -> Vector2D;
 
-    /// Returns the direction in which children of the current widget
-    /// are placed (For internal use only)
+    /// Returns the original size of the current widget
+    ///
+    /// # Arguments
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// let widget = Widget::new();
+    ///
+    /// let (width, height) = widget.original_size();
+    /// ```
+    fn original_size(&mut self) -> Vector2D;
+
+    /// Returns the layout of the current widget (For internal use only)
     ///
     /// # Arguments
     ///
@@ -154,7 +183,7 @@ pub trait Widget {
     ///     }
     /// }
     /// ```
-    fn axis(&mut self) -> &Axis;
+    fn layout(&mut self) -> &Layout;
 
     /// Returns the offset vector coordinates related with the margin in the current widget
     ///
@@ -180,7 +209,8 @@ pub trait Widget {
         &mut Vec<Weak<RefCell<dyn Widget>>>,
         Vector2D,
         Vector2D,
-        &Axis,
+        Vector2D,
+        &Layout,
         Vector2D,
     );
 
@@ -219,6 +249,8 @@ pub trait Widget {
     /// }
     /// ```
     fn set_size(&mut self, size: Vector2D);
+
+    fn set_original_size(&mut self, size: Vector2D);
 
     /// TODO: documentar
     fn set_offset(&mut self, offset: Vector2D);
@@ -267,51 +299,128 @@ pub trait Widget {
             self.set_dirty(false);
         }
 
-        // Get children of widget
-        // Get orientation to draw children in widget
-        // Get offset vector
-        let (_, children, _, _, axis, offset) = self.get_fields();
+        // Get children, layout, and offset of widget
+        let (_, children, _, size, original_size, layout, offset) = self.get_fields();
 
-        // For children size
-        let mut child_size: Vector2D;
+        match layout {
+            Layout::Box(axis) => {
+                // For children size
+                let mut child_size: Vector2D;
 
-        // Update maximum dimensions according to offset
-        max -= offset * 2;
+                // Update maximum dimensions according to offset
+                max -= offset * 2.;
 
-        // Update position of first child
-        position += offset;
+                // Update position of first child
+                position += offset;
 
-        let mut children_dirty = false;
-        // Traverse each child and assign their constraints
-        for value in children.iter_mut() {
-            if let Some(child) = value.upgrade() {
-                if children_dirty {
-                    child.borrow_mut().set_dirty(true);
-                } else if child.borrow_mut().is_dirty() {
-                    children_dirty = true;
+                let mut children_dirty = false;
+
+                for value in children.iter_mut() {
+                    if let Some(child) = value.upgrade() {
+                        if children_dirty {
+                            child.borrow_mut().set_dirty(true);
+                        } else if child.borrow_mut().is_dirty() {
+                            children_dirty = true;
+                        }
+
+                        // Get original child dimensions and do something to handle
+                        // the dimensions assigned to the child
+                        child_size = child.borrow_mut().original_size().min(max);
+
+                        // Pass the child the assigned dimensions
+                        child.borrow_mut().build(
+                            position,
+                            child_size,
+                            id_machine,
+                            instruction_collection,
+                        );
+                        // Update the constraints and position of next child
+                        match axis {
+                            Axis::Horizontal => {
+                                max.x -= child_size.x;
+                                position.x += child_size.x;
+                            }
+                            Axis::Vertical => {
+                                max.y -= child_size.y;
+                                position.y += child_size.y;
+                            }
+                        };
+                    }
                 }
-                // Get child dimensions
-                child_size = child.borrow_mut().size();
+            }
+            Layout::Grid(axis, axis_length) => match axis {
+                Axis::Vertical => {
+                    let cell_size = size
+                        / Vector2D::new(
+                            *axis_length as f64,
+                            children.len() as f64 / *axis_length as f64,
+                        );
 
-                // Do something to handle the dimensions assigned to the child
-                child_size = child_size.min(max);
+                    let mut i: usize = 0;
+                    for value in children.iter_mut() {
+                        if let Some(child) = value.upgrade() {
+                            let child_size = child.borrow_mut().original_size().min(cell_size);
 
-                // Pass the child the assigned dimensions
-                child
-                    .borrow_mut()
-                    .build(position, child_size, id_machine, instruction_collection);
-
-                // Update the constraints and position of next child
-                match axis {
-                    Axis::Horizontal => {
-                        max.x -= child_size.x;
-                        position.x += child_size.x;
+                            // Pass the child the assigned dimensions
+                            child.borrow_mut().build(
+                                position
+                                    + cell_size
+                                        * Vector2D::new(
+                                            (i % *axis_length) as f64,
+                                            (i / *axis_length) as f64,
+                                        ),
+                                child_size,
+                                id_machine,
+                                instruction_collection,
+                            );
+                            i += 1;
+                        }
                     }
-                    Axis::Vertical => {
-                        max.y -= child_size.y;
-                        position.y += child_size.y;
+                }
+                Axis::Horizontal => {
+                    let cell_size = size
+                        / Vector2D::new(
+                            children.len() as f64 / *axis_length as f64,
+                            *axis_length as f64,
+                        );
+
+                    let mut i: usize = 0;
+                    for value in children.iter_mut() {
+                        if let Some(child) = value.upgrade() {
+                            let child_size = child.borrow_mut().original_size().min(cell_size);
+                            // Pass the child the assigned dimensions
+                            child.borrow_mut().build(
+                                position
+                                    + cell_size
+                                        * Vector2D::new(
+                                            (i / *axis_length) as f64,
+                                            (i % *axis_length) as f64,
+                                        ),
+                                child_size,
+                                id_machine,
+                                instruction_collection,
+                            );
+                            i += 1;
+                        }
                     }
-                };
+                }
+            },
+            Layout::Sliver(_axis) => {
+                unimplemented!();
+            }
+            Layout::None => {
+                for value in children.iter_mut() {
+                    if let Some(child) = value.upgrade() {
+                        let child_size = child.borrow_mut().original_size().min(max);
+                        // Pass the child the assigned dimensions
+                        child.borrow_mut().build(
+                            position,
+                            child_size,
+                            id_machine,
+                            instruction_collection,
+                        );
+                    }
+                }
             }
         }
     }

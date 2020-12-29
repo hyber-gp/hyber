@@ -3,7 +3,7 @@ use crate::event::Event;
 use crate::key_code::KeyCode;
 use crate::renderer::{Message, RenderInstruction};
 use crate::util::{Color, Queue, Vector2D};
-use crate::widget::{Axis, Widget};
+use crate::widget::{Layout, Widget};
 
 use std::cell::RefCell;
 use std::rc::Weak;
@@ -12,11 +12,12 @@ use std::rc::Weak;
 pub struct RootWidget {
     id: usize,
     size: Vector2D,
+    original_size: Vector2D,
     background_color: Color,
     message_incremented: Box<dyn Message>,
     message_decremented: Box<dyn Message>,
     message_resized: Box<dyn Message>,
-    axis: Axis,
+    layout: Layout,
     dirty: bool,
     children: Vec<Weak<RefCell<dyn Widget>>>,
 }
@@ -25,7 +26,7 @@ impl RootWidget {
     pub fn new(
         size: Vector2D,
         background_color: Color,
-        axis: Axis,
+        layout: Layout,
         message_incremented: Box<dyn Message>,
         message_decremented: Box<dyn Message>,
         message_resized: Box<dyn Message>,
@@ -33,8 +34,9 @@ impl RootWidget {
         RootWidget {
             id: 0,
             size: size,
+            original_size: size,
             background_color: background_color,
-            axis: axis,
+            layout: layout,
             message_incremented: message_incremented,
             message_decremented: message_decremented,
             message_resized: message_resized,
@@ -122,20 +124,24 @@ impl Widget for RootWidget {
     }
 
     fn position(&mut self) -> Vector2D {
-        Vector2D::new(0, 0)
+        Vector2D::new(0., 0.)
     }
 
     fn size(&mut self) -> Vector2D {
         self.size
     }
 
-    fn axis(&mut self) -> &Axis {
+    fn original_size(&mut self) -> Vector2D {
+        self.original_size
+    }
+
+    fn layout(&mut self) -> &Layout {
         // TODO: Ver se faz sentido ser só vertical
-        &self.axis
+        &self.layout
     }
 
     fn offset(&mut self) -> Vector2D {
-        Vector2D::new(0, 0)
+        Vector2D::new(0., 0.)
     }
 
     fn get_fields(
@@ -145,16 +151,18 @@ impl Widget for RootWidget {
         &mut Vec<Weak<RefCell<dyn Widget>>>,
         Vector2D,
         Vector2D,
-        &Axis,
+        Vector2D,
+        &Layout,
         Vector2D,
     ) {
         (
             self.dirty,
             &mut self.children,
-            Vector2D::new(0, 0),
+            Vector2D::new(0., 0.),
             self.size,
-            &self.axis,
-            Vector2D::new(0, 0),
+            self.original_size,
+            &self.layout,
+            Vector2D::new(0., 0.),
         )
     }
 
@@ -163,6 +171,11 @@ impl Widget for RootWidget {
     fn set_size(&mut self, size: Vector2D) {
         self.dirty = true;
         self.size = size;
+    }
+
+    fn set_original_size(&mut self, size: Vector2D) {
+        self.dirty = true;
+        self.original_size = size;
     }
 
     fn set_offset(&mut self, _offset: Vector2D) {}

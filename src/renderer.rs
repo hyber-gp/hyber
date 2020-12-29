@@ -229,7 +229,7 @@ pub trait Renderer<D, E> {
                 }
 
                 root.borrow_mut()
-                    .build(Vector2D::new(0, 0), display_size, id_machine, collection);
+                    .build(Vector2D::new(0., 0.), display_size, id_machine, collection);
 
                 // 3º desenhar
                 self.draw_collection(collection, display);
