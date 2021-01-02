@@ -6,7 +6,7 @@ use crate::util::Vector2D;
 use crate::widget::Widget;
 
 use std::cell::RefCell;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::rc::Weak;
 
 #[derive(Clone)]
@@ -215,7 +215,8 @@ pub trait Renderer<D, E> {
         display: &mut D,
         display_size: Vector2D,
         id_machine: &mut IDMachine,
-        collection: &mut RenderInstructionCollection,
+        render_instruction_collection_ptr: Weak<RefCell<RenderInstructionCollection>>,
+        absolute_widget_collection_ptr: Weak<RefCell<AbsoluteWidgetCollection>>,
     ) {
         loop {
             // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
@@ -224,18 +225,52 @@ pub trait Renderer<D, E> {
             // 2º chamar on event na arvore de widgets
             // estes eventos alterarão a collection.
             if let Some(root) = root_ptr.upgrade() {
-                for event in events.queue.drain(..) {
-                    root.borrow_mut().on_event(event, &mut messages);
-                }
+                if let Some(render_instruction_collection) =
+                    render_instruction_collection_ptr.upgrade()
+                {
+                    for event in events.queue.drain(..) {
+                        root.borrow_mut().on_event(event, &mut messages);
+                    }
 
-                root.borrow_mut()
-                    .build(Vector2D::new(0., 0.), display_size, id_machine, collection);
+                    root.borrow_mut().build(
+                        Vector2D::new(0., 0.),
+                        display_size,
+                        id_machine,
+                        &mut render_instruction_collection.borrow_mut(),
+                    );
 
-                // 3º desenhar
-                self.draw_collection(collection, display);
-                // 4º percorrer as mensagens e fazer update
-                for message in messages.queue.drain(..) {
-                    message.update();
+                    // Chamar build do absolute
+                    if let Some(absolute_widgets) = absolute_widget_collection_ptr.upgrade() {
+                        println!("tamanho: {}", absolute_widgets.borrow_mut().widgets.len());
+                        for (id, (value, position, size)) in
+                            absolute_widgets.borrow_mut().widgets.iter()
+                        {
+                            if let Some(widget) = value.upgrade() {
+                                if widget.borrow_mut().is_dirty() {
+                                    // Assign position of widget
+                                    widget.borrow_mut().set_position(*position);
+                                    // Assign size of widget
+                                    widget.borrow_mut().set_size(*size);
+
+                                    render_instruction_collection.borrow_mut().remove(*id);
+                                    render_instruction_collection
+                                        .borrow_mut()
+                                        .replace_or_insert(
+                                            *id,
+                                            widget.borrow_mut().recipe().clone(),
+                                        );
+                                    widget.borrow_mut().set_dirty(false);
+                                }
+                            }
+                        }
+                    }
+
+                    // 3º desenhar
+                    self.draw_collection(&mut render_instruction_collection.borrow_mut(), display);
+                    // 4º percorrer as mensagens e fazer update
+                    for message in messages.queue.drain(..) {
+                        message.update();
+                    }
                 }
             }
         }
@@ -250,69 +285,6 @@ pub trait Renderer<D, E> {
     /// * `instruction` - RenderInstruction to draw a primitive
     fn draw_collection(&mut self, collection: &RenderInstructionCollection, display: &mut D);
 }
-
-// Example:
-//
-// Criar:
-//     (-> BTreeMap<K, V>)
-//     - makes a new empty BTreeMap.
-//
-//     let mut map = BTreeMap::new();
-//
-// Limpar:
-//     - clears the map, removing all elements
-//
-//     map.clear();
-//
-// Get Value:
-//     (-> Option<&V>)
-//     - returns a reference to the value corresponding to the key
-//
-//     map.get(&1);
-//
-// Get Key-Value:
-//     (-> Option<(&K, &V)>)
-//     - returns the key-value pair corresponding to the supplied key
-//
-//     map.get_key_value(&1);
-//
-// Get Mutable Value:
-//     (-> Option<&mut V>)
-//     - returns a mutable reference to the value corresponding to the key.
-//
-//     map.get_mut(&1);
-//
-// Contains Key:
-//     (bool)
-//     - returns true if the map contains a value for the specified key.
-//
-//     map.contains_key(&1);
-//
-// First Key-Value:
-//     (-> Option<(&K, &V)>)
-//     - to obtain the first key-value pair in the map
-//
-//     map.first_key_value();
-//
-// Insertion:
-//     (-> Option<V>)
-//     - inserts a key-value pair into the map
-//
-//     map.insert(1, RenderInstruction::DrawPoint);
-//
-// Remove:
-//     (-> Option<V>)
-//     - removes a key from the map, returning the value at the key
-//     - if the key was previously in the map
-//
-//     map.remove(&1);
-//
-// Remove Entry:
-//     (-> Option<(K, V)>)
-//     - removes a key from the map, returning the stored key and value
-//     - if the key was previously in the map
-//
-//     map.remove_entry(&1);
 
 /// Structure that represents the collection of Render Instructions to be
 /// rendered each frame
@@ -335,14 +307,35 @@ impl RenderInstructionCollection {
         self.pairs.remove(&id);
     }
 }
-// Assumptions for the map:
-//  - Need to have a key-value pair of <u32, RenderInstruction>/<id, RenderInstruction>
-// Requirements:
-//  - Fast iterator, due to client requirements of rendering
-//
-// BTreeMap is the choice because of our use case:
-//     - You want a map sorted by its keys.
-//
-// References:
-//     - https://doc.rust-lang.org/std/collections/struct.BTreeMap.html
-//     - https://doc.rust-lang.org/std/collections/index.html
+
+pub struct AbsoluteWidgetCollection {
+    counter: usize,
+    pub widgets: HashMap<usize, (Weak<RefCell<dyn Widget>>, Vector2D, Vector2D)>,
+}
+
+impl AbsoluteWidgetCollection {
+    pub fn new() -> AbsoluteWidgetCollection {
+        AbsoluteWidgetCollection {
+            counter: usize::MAX,
+            widgets: HashMap::<usize, (Weak<RefCell<dyn Widget>>, Vector2D, Vector2D)>::new(),
+        }
+    }
+
+    pub fn insert(
+        &mut self,
+        widget_ptr: Weak<RefCell<dyn Widget>>,
+        position: Vector2D,
+        size: Vector2D,
+    ) {
+        if let Some(widget) = widget_ptr.upgrade() {
+            widget.borrow_mut().set_id(self.counter);
+            self.widgets
+                .insert(self.counter, (widget_ptr, position, size));
+            self.counter -= 1;
+        }
+    }
+
+    pub fn remove(&mut self, id: usize) {
+        self.widgets.remove(&id);
+    }
+}

@@ -9,11 +9,12 @@ use crate::util::Vector2D;
 use std::cell::RefCell;
 use std::rc::Weak;
 
-pub mod list_view;
 pub mod grid_view;
 pub mod icon;
 pub mod label;
+pub mod list_view;
 pub mod root;
+pub mod tooltip_view;
 
 /// Enum that classifies the type of constraints that
 /// a parent imposes to its children

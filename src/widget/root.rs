@@ -77,11 +77,6 @@ impl Widget for RootWidget {
                 message.set_event(event);
                 messages.enqueue(message);
             }
-            event::Event::Mouse(event::Mouse::CursorMoved { x: _, y: _ }) => {
-                let mut message = self.message_resized.clone();
-                message.set_event(event);
-                messages.enqueue(message);
-            }
             _ => {
                 for value in self.children.iter_mut() {
                     if let Some(child) = value.upgrade() {
