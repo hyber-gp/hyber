@@ -16,7 +16,6 @@ pub struct RootWidget {
     background_color: Color,
     message_incremented: Box<dyn Message>,
     message_decremented: Box<dyn Message>,
-    message_resized: Box<dyn Message>,
     layout: Layout,
     dirty: bool,
     children: Vec<Weak<RefCell<dyn Widget>>>,
@@ -29,7 +28,6 @@ impl RootWidget {
         layout: Layout,
         message_incremented: Box<dyn Message>,
         message_decremented: Box<dyn Message>,
-        message_resized: Box<dyn Message>,
     ) -> RootWidget {
         RootWidget {
             id: 0,
@@ -39,13 +37,11 @@ impl RootWidget {
             layout: layout,
             message_incremented: message_incremented,
             message_decremented: message_decremented,
-            message_resized: message_resized,
             dirty: true,
             children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
         }
     }
 }
-
 impl Widget for RootWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
         match event {
@@ -74,11 +70,6 @@ impl Widget for RootWidget {
                     },
             }) => {
                 let mut message = self.message_decremented.clone();
-                message.set_event(event);
-                messages.enqueue(message);
-            }
-            event::Event::Mouse(event::Mouse::CursorMoved { x: _, y: _ }) => {
-                let mut message = self.message_resized.clone();
                 message.set_event(event);
                 messages.enqueue(message);
             }
