@@ -58,7 +58,7 @@ impl ButtonViewWidget {
     }
 
     fn is_mouse_inside(&mut self) -> bool {
-        if self.cursor_pos.x>=self.position().x && self.cursor_pos.x<=(self.position().x+self.original_size().x) && self.cursor_pos.y>=self.position().y && self.cursor_pos.y <=(self.position().y+self.size().y) {
+        if self.cursor_pos.x>=self.position().x && self.cursor_pos.x<=(self.position().x+self.size().x) && self.cursor_pos.y>=self.position().y && self.cursor_pos.y <=(self.position().y+self.size().y) {
             true
         }else{
             false
