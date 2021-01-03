@@ -14,6 +14,7 @@ pub mod grid_view;
 pub mod icon;
 pub mod label;
 pub mod root;
+pub mod tab;
 
 /// Enum that classifies the type of constraints that
 /// a parent imposes to its children

@@ -81,6 +81,11 @@ impl Widget for RootWidget {
                 let mut message = self.message_resized.clone();
                 message.set_event(event);
                 messages.enqueue(message);
+                for value in self.children.iter_mut() {
+                    if let Some(child) = value.upgrade() {
+                        child.borrow_mut().on_event(event, messages);
+                    }
+                }
             }
             _ => {
                 for value in self.children.iter_mut() {
