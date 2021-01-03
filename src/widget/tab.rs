@@ -22,17 +22,20 @@ pub struct TabWidget {
     layout: Layout,
     offset: Vector2D,
     on_press: Option<Box<dyn Message>>,
-    on_long_press: Option<Box<dyn Message>>,
+    tab_moved_left: Option<Box<dyn Message>>,
+    tab_moved_right: Option<Box<dyn Message>>,
     is_pressed: bool, 
     click_time: Instant, 
     cursor_pos: Vector2D, 
+    moved_cursor_pos: Vector2D,
 }
 impl TabWidget {
     pub fn new(
         size: Vector2D,
         background_color: Color,
         on_press: Option<Box<dyn Message>>,
-        on_long_press: Option<Box<dyn Message>>,
+        tab_moved_left: Option<Box<dyn Message>>,
+        tab_moved_right: Option<Box<dyn Message>>,
     ) -> TabWidget {
         TabWidget {
             id: 0,
@@ -45,10 +48,12 @@ impl TabWidget {
             layout: Layout::None,
             offset: Vector2D::new(0., 0.),
             on_press: on_press,
-            on_long_press: on_long_press,
+            tab_moved_left: tab_moved_left,
+            tab_moved_right:tab_moved_right,
             is_pressed: false,
             click_time: Instant::now(),
             cursor_pos: Vector2D::new(-1.,-1.),
+            moved_cursor_pos: Vector2D::new(-1.,-1.),
         }
     }
     fn is_mouse_inside(&mut self) -> bool {
@@ -59,13 +64,15 @@ impl TabWidget {
         }
        
     }
-
-    pub fn setNewMessageOnLongPress(&mut self, newMessage:Option<Box<dyn Message>>){
-        self.on_long_press = newMessage;
+    pub fn setNewMessageMoveLeft(&mut self, newMessage:Option<Box<dyn Message>>){
+        self.tab_moved_left = newMessage;
+    }
+    pub fn setNewMessageMoveRight(&mut self, newMessage:Option<Box<dyn Message>>){
+        self.tab_moved_right = newMessage;
     }
 
-    pub fn getId(self){
-        self.id;
+    pub fn get_moved_cursor_pos(&mut self) -> Vector2D{
+        self.moved_cursor_pos
     }
 }
 
@@ -91,20 +98,34 @@ impl Widget for TabWidget {
             event::Event::Mouse(event::Mouse::ButtonReleased(event::MouseButton::Left)) => {
                 if self.is_pressed{
                     if self.is_mouse_inside(){
+                        //Tab pressed
                         if self.click_time.elapsed().as_millis() < ON_LONG_PRESS_TIME {
                             if let Some(mut message) = self.on_press.clone() {
                                 message.set_event(event);
                                 messages.enqueue(message);
                                 println!("Press");
                             }
-                        } else{
-                            if let Some(mut message) = self.on_long_press.clone() {
+                        }    
+                    }
+                    //TAB MOVED
+                    if self.click_time.elapsed().as_millis() > ON_LONG_PRESS_TIME{
+                        self.moved_cursor_pos.x = self.cursor_pos.x;
+                        self.moved_cursor_pos.y = self.cursor_pos.y;
+                        //Check if moved to the left or to the right
+                        if self.moved_cursor_pos.x < self.position().x{
+                            if let Some(mut message) = self.tab_moved_left.clone() {
                                 message.set_event(event);
                                 messages.enqueue(message);
-                                println!("Long press!");
+                                println!("Tab Moved left!");
                             }
-                        }     
-                    }
+                        }else{
+                            if let Some(mut message) = self.tab_moved_right.clone() {
+                                message.set_event(event);
+                                messages.enqueue(message);
+                                println!("Tab Moved Right!");
+                            }
+                        }
+                    }  
                     self.is_pressed= false;
                 }
             }
@@ -214,5 +235,6 @@ impl Widget for TabWidget {
     fn set_offset(&mut self, offset: Vector2D) {
         self.offset = offset;
     }
+
 
 }
