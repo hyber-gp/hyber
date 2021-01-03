@@ -17,8 +17,8 @@ pub struct ButtonViewWidget {
     background_color: Color,
     on_press: Option<Box<dyn Message>>,
     on_long_press: Option<Box<dyn Message>>,
-    is_pressed: bool, //State
-    click_time: Instant, //State
+    is_pressed: bool,     //State
+    click_time: Instant,  //State
     cursor_pos: Vector2D, //State
     dirty: bool,
     children: Vec<Weak<RefCell<dyn Widget>>>,
@@ -45,7 +45,7 @@ impl ButtonViewWidget {
             on_long_press: on_long_press,
             is_pressed: false,
             click_time: Instant::now(),
-            cursor_pos: Vector2D::new(-1.,-1.),
+            cursor_pos: Vector2D::new(-1., -1.),
             dirty: true,
             children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
             position: Vector2D::new(0., 0.),
@@ -57,31 +57,33 @@ impl ButtonViewWidget {
     }
 
     fn is_mouse_inside(&mut self) -> bool {
-        if self.cursor_pos.x>=self.position().x && self.cursor_pos.x<=(self.position().x+self.size().x) && self.cursor_pos.y>=self.position().y && self.cursor_pos.y <=(self.position().y+self.size().y) {
+        if self.cursor_pos.x >= self.position().x
+            && self.cursor_pos.x <= (self.position().x + self.size().x)
+            && self.cursor_pos.y >= self.position().y
+            && self.cursor_pos.y <= (self.position().y + self.size().y)
+        {
             true
-        }else{
+        } else {
             false
         }
-        
     }
 
-    pub fn set_is_clickable(&mut self, value: bool){
-        self.is_clickable=value;
+    pub fn set_is_clickable(&mut self, value: bool) {
+        self.is_clickable = value;
     }
-
 }
 
 impl Widget for ButtonViewWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
-        match event{
-            event::Event::Mouse(event::Mouse::CursorMoved {x: x_pos, y: y_pos}) =>{
-                self.cursor_pos = Vector2D::new(x_pos as f64,y_pos as f64);
+        match event {
+            event::Event::Mouse(event::Mouse::CursorMoved { x: x_pos, y: y_pos }) => {
+                self.cursor_pos = Vector2D::new(x_pos as f64, y_pos as f64);
                 for value in self.children.iter_mut() {
                     if let Some(child) = value.upgrade() {
                         child.borrow_mut().on_event(event, messages);
                     }
                 }
-            },
+            }
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
                 if self.is_clickable && (self.on_press.is_some() || self.on_long_press.is_some()) {
                     if self.is_mouse_inside() {
@@ -89,26 +91,26 @@ impl Widget for ButtonViewWidget {
                         self.click_time = Instant::now();
                     }
                 }
-            },
+            }
             event::Event::Mouse(event::Mouse::ButtonReleased(event::MouseButton::Left)) => {
                 if self.is_pressed {
                     self.is_pressed = false;
-                    if self.is_mouse_inside(){
+                    if self.is_mouse_inside() {
                         if self.click_time.elapsed().as_millis() < ON_LONG_PRESS_TIME {
                             if let Some(mut message) = self.on_press.clone() {
                                 message.set_event(event);
                                 messages.enqueue(message);
                             }
-                        } else{
+                        } else {
                             if let Some(mut message) = self.on_long_press.clone() {
                                 message.set_event(event);
                                 messages.enqueue(message);
                             }
-                        }                       
+                        }
                     }
                 }
             }
-            _ =>{
+            _ => {
                 for value in self.children.iter_mut() {
                     if let Some(child) = value.upgrade() {
                         child.borrow_mut().on_event(event, messages);
@@ -204,5 +206,4 @@ impl Widget for ButtonViewWidget {
     fn set_offset(&mut self, offset: Vector2D) {
         self.offset = offset;
     }
-
 }

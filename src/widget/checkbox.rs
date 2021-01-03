@@ -16,7 +16,7 @@ pub struct CheckBoxWidget {
     border_size: f64,
     selected_relative_size: f64,
     cursor_pos: Vector2D, //State
-    is_checked: bool, //State
+    is_checked: bool,     //State
     dirty: bool,
     children: Vec<Weak<RefCell<dyn Widget>>>,
     position: Vector2D,
@@ -35,7 +35,6 @@ impl CheckBoxWidget {
         is_checked: bool,
         border_size: f64,
         selected_relative_size: f64,
-
     ) -> CheckBoxWidget {
         CheckBoxWidget {
             id: 0,
@@ -45,7 +44,7 @@ impl CheckBoxWidget {
             is_checked: is_checked,
             border_size: border_size,
             selected_relative_size: selected_relative_size,
-            cursor_pos: Vector2D::new(-1.,-1.),
+            cursor_pos: Vector2D::new(-1., -1.),
             dirty: true,
             children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
             position: Vector2D::new(0., 0.),
@@ -57,15 +56,18 @@ impl CheckBoxWidget {
     }
 
     fn is_mouse_inside(&mut self) -> bool {
-        if self.cursor_pos.x>=self.position().x && self.cursor_pos.x<=(self.position().x+self.size().x) && self.cursor_pos.y>=self.position().y && self.cursor_pos.y <=(self.position().y+self.size().y) {
+        if self.cursor_pos.x >= self.position().x
+            && self.cursor_pos.x <= (self.position().x + self.size().x)
+            && self.cursor_pos.y >= self.position().y
+            && self.cursor_pos.y <= (self.position().y + self.size().y)
+        {
             true
-        }else{
+        } else {
             false
         }
-        
     }
 
-    pub fn set_message(&mut self, on_change: Option<Box<dyn Message>>){
+    pub fn set_message(&mut self, on_change: Option<Box<dyn Message>>) {
         self.on_change = on_change;
     }
 
@@ -76,26 +78,26 @@ impl CheckBoxWidget {
 
 impl Widget for CheckBoxWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
-        match event{
-            event::Event::Mouse(event::Mouse::CursorMoved {x: x_pos, y: y_pos}) =>{
-                self.cursor_pos = Vector2D::new(x_pos as f64,y_pos as f64);
+        match event {
+            event::Event::Mouse(event::Mouse::CursorMoved { x: x_pos, y: y_pos }) => {
+                self.cursor_pos = Vector2D::new(x_pos as f64, y_pos as f64);
                 for value in self.children.iter_mut() {
                     if let Some(child) = value.upgrade() {
                         child.borrow_mut().on_event(event, messages);
                     }
                 }
-            },
+            }
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
-                if self.is_mouse_inside(){
-                    if let Some(mut message) = self.on_change.clone(){
+                if self.is_mouse_inside() {
+                    if let Some(mut message) = self.on_change.clone() {
                         message.set_event(event);
                         messages.enqueue(message);
                     }
                     self.is_checked = !self.is_checked;
                     self.set_dirty(true);
                 }
-            },
-            _ =>{
+            }
+            _ => {
                 for value in self.children.iter_mut() {
                     if let Some(child) = value.upgrade() {
                         child.borrow_mut().on_event(event, messages);
@@ -114,31 +116,43 @@ impl Widget for CheckBoxWidget {
     }
 
     fn recipe(&self) -> Vec<RenderInstruction> {
-        if self.is_checked{
+        if self.is_checked {
             vec![
-                RenderInstruction::DrawRect{
+                RenderInstruction::DrawRect {
                     point: self.position,
                     color: self.selected_color,
                     size: self.size,
                 },
-                RenderInstruction::DrawRect{
-                    point: Vector2D::new(self.position.x+self.size.x*self.selected_relative_size, self.position.y+self.size.y*self.selected_relative_size),
+                RenderInstruction::DrawRect {
+                    point: Vector2D::new(
+                        self.position.x + self.size.x * self.selected_relative_size,
+                        self.position.y + self.size.y * self.selected_relative_size,
+                    ),
                     color: self.background_color,
-                    size: Vector2D::new(self.size.x-(2.*(self.size.x*self.selected_relative_size)), self.size.y-(2.*(self.size.y*self.selected_relative_size)))
-                }
-            ] 
-        }else{
+                    size: Vector2D::new(
+                        self.size.x - (2. * (self.size.x * self.selected_relative_size)),
+                        self.size.y - (2. * (self.size.y * self.selected_relative_size)),
+                    ),
+                },
+            ]
+        } else {
             vec![
-                RenderInstruction::DrawRect{
+                RenderInstruction::DrawRect {
                     point: self.position,
                     color: Color::from_hex(0xFF000000),
                     size: self.size,
                 },
-                RenderInstruction::DrawRect{
-                    point: Vector2D::new(self.position.x+self.border_size, self.position.y+self.border_size),
+                RenderInstruction::DrawRect {
+                    point: Vector2D::new(
+                        self.position.x + self.border_size,
+                        self.position.y + self.border_size,
+                    ),
                     color: self.background_color,
-                    size: Vector2D::new(self.size.x-(2.*self.border_size), self.size.y-(2.*self.border_size))
-                }
+                    size: Vector2D::new(
+                        self.size.x - (2. * self.border_size),
+                        self.size.y - (2. * self.border_size),
+                    ),
+                },
             ]
         }
     }
@@ -217,5 +231,4 @@ impl Widget for CheckBoxWidget {
     fn set_offset(&mut self, offset: Vector2D) {
         self.offset = offset;
     }
-
 }
