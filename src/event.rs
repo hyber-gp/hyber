@@ -117,17 +117,6 @@ pub enum Window {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum CheckBox{
-    Selected,
-    NotSelected,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum Widget{
-    CheckBox(CheckBox),
-}
-
-#[derive(Debug, Copy, Clone)]
 ///Representation of an user interface event
 pub enum Event {
     /// A keyboard event (eg. KeyPressed, KeyRelease...)
@@ -138,7 +127,4 @@ pub enum Event {
 
     ///A windown event (eg. Resize, ...)
     Window(Window),
-
-    ///Widget teste
-    Widget(Widget),
 }

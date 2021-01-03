@@ -88,12 +88,7 @@ impl Widget for CheckBoxWidget {
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
                 if self.is_mouse_inside(){
                     if let Some(mut message) = self.on_change.clone(){
-                        if self.is_checked{
-                            message.set_event(event::Event::Widget(event::Widget::CheckBox(event::CheckBox::NotSelected)));
-                        }
-                        else{
-                            message.set_event(event::Event::Widget(event::Widget::CheckBox(event::CheckBox::Selected)));
-                        }
+                        message.set_event(event);
                         messages.enqueue(message);
                     }
                     self.is_checked = !self.is_checked;
