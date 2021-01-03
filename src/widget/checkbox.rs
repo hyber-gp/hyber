@@ -6,20 +6,17 @@ use crate::widget::{Layout, Widget};
 
 use std::cell::RefCell;
 use std::rc::Weak;
-use std::time::Instant;
-
-const ON_LONG_PRESS_TIME: u128 = 500;
 
 #[derive(Clone)]
-pub struct ButtonViewWidget {
+pub struct CheckBoxWidget {
     id: usize,
-    is_clickable: bool,
     background_color: Color,
-    on_press: Option<Box<dyn Message>>,
-    on_long_press: Option<Box<dyn Message>>,
-    is_pressed: bool, //State
-    click_time: Instant, //State
+    selected_color: Color,
+    on_change: Option<Box<dyn Message>>,
+    border_size: f64,
+    selected_relative_size: f64,
     cursor_pos: Vector2D, //State
+    is_checked: bool, //State
     dirty: bool,
     children: Vec<Weak<RefCell<dyn Widget>>>,
     position: Vector2D,
@@ -29,22 +26,25 @@ pub struct ButtonViewWidget {
     offset: Vector2D,
 }
 
-impl ButtonViewWidget {
+impl CheckBoxWidget {
     pub fn new(
         size: Vector2D,
-        is_clickable: bool,
         background_color: Color,
-        on_press: Option<Box<dyn Message>>,
-        on_long_press: Option<Box<dyn Message>>,
-    ) -> ButtonViewWidget {
-        ButtonViewWidget {
+        selected_color: Color,
+        on_change: Option<Box<dyn Message>>,
+        is_checked: bool,
+        border_size: f64,
+        selected_relative_size: f64,
+
+    ) -> CheckBoxWidget {
+        CheckBoxWidget {
             id: 0,
             background_color: background_color,
-            is_clickable: is_clickable,
-            on_press: on_press,
-            on_long_press: on_long_press,
-            is_pressed: false,
-            click_time: Instant::now(),
+            selected_color: selected_color,
+            on_change: on_change,
+            is_checked: is_checked,
+            border_size: border_size,
+            selected_relative_size: selected_relative_size,
             cursor_pos: Vector2D::new(-1.,-1.),
             dirty: true,
             children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
@@ -65,13 +65,16 @@ impl ButtonViewWidget {
         
     }
 
-    pub fn set_is_clickable(&mut self, value: bool){
-        self.is_clickable=value;
+    pub fn set_message(&mut self, on_change: Option<Box<dyn Message>>){
+        self.on_change = on_change;
     }
 
+    pub fn get_is_checked(&self) -> bool {
+        self.is_checked
+    }
 }
 
-impl Widget for ButtonViewWidget {
+impl Widget for CheckBoxWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
         match event{
             event::Event::Mouse(event::Mouse::CursorMoved {x: x_pos, y: y_pos}) =>{
@@ -83,31 +86,20 @@ impl Widget for ButtonViewWidget {
                 }
             },
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
-                if self.is_clickable && (self.on_press.is_some() || self.on_long_press.is_some()) {
-                    if self.is_mouse_inside() {
-                        self.is_pressed = true;
-                        self.click_time = Instant::now();
+                if self.is_mouse_inside(){
+                    if let Some(mut message) = self.on_change.clone(){
+                        if self.is_checked{
+                            message.set_event(event::Event::Widget(event::Widget::CheckBox(event::CheckBox::NotSelected)));
+                        }
+                        else{
+                            message.set_event(event::Event::Widget(event::Widget::CheckBox(event::CheckBox::Selected)));
+                        }
+                        messages.enqueue(message);
                     }
+                    self.is_checked = !self.is_checked;
+                    self.set_dirty(true);
                 }
             },
-            event::Event::Mouse(event::Mouse::ButtonReleased(event::MouseButton::Left)) => {
-                if self.is_pressed {
-                    self.is_pressed = false;
-                    if self.is_mouse_inside(){
-                        if self.click_time.elapsed().as_millis() < ON_LONG_PRESS_TIME {
-                            if let Some(mut message) = self.on_press.clone() {
-                                message.set_event(event);
-                                messages.enqueue(message);
-                            }
-                        } else{
-                            if let Some(mut message) = self.on_long_press.clone() {
-                                message.set_event(event);
-                                messages.enqueue(message);
-                            }
-                        }                       
-                    }
-                }
-            }
             _ =>{
                 for value in self.children.iter_mut() {
                     if let Some(child) = value.upgrade() {
@@ -127,7 +119,33 @@ impl Widget for ButtonViewWidget {
     }
 
     fn recipe(&self) -> Vec<RenderInstruction> {
-        vec![]
+        if self.is_checked{
+            vec![
+                RenderInstruction::DrawRect{
+                    point: self.position,
+                    color: self.selected_color,
+                    size: self.size,
+                },
+                RenderInstruction::DrawRect{
+                    point: Vector2D::new(self.position.x+self.size.x*self.selected_relative_size, self.position.y+self.size.y*self.selected_relative_size),
+                    color: self.background_color,
+                    size: Vector2D::new(self.size.x-(2.*(self.size.x*self.selected_relative_size)), self.size.y-(2.*(self.size.y*self.selected_relative_size)))
+                }
+            ] 
+        }else{
+            vec![
+                RenderInstruction::DrawRect{
+                    point: self.position,
+                    color: Color::from_hex(0xFF000000),
+                    size: self.size,
+                },
+                RenderInstruction::DrawRect{
+                    point: Vector2D::new(self.position.x+self.border_size, self.position.y+self.border_size),
+                    color: self.background_color,
+                    size: Vector2D::new(self.size.x-(2.*self.border_size), self.size.y-(2.*self.border_size))
+                }
+            ]
+        }
     }
 
     fn set_dirty(&mut self, value: bool) {

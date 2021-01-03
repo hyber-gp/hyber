@@ -115,6 +115,18 @@ pub enum Window {
         height: u32,
     },
 }
+
+#[derive(Debug, Copy, Clone)]
+pub enum CheckBox{
+    Selected,
+    NotSelected,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum Widget{
+    CheckBox(CheckBox),
+}
+
 #[derive(Debug, Copy, Clone)]
 ///Representation of an user interface event
 pub enum Event {
@@ -126,4 +138,7 @@ pub enum Event {
 
     ///A windown event (eg. Resize, ...)
     Window(Window),
+
+    ///Widget teste
+    Widget(Widget),
 }

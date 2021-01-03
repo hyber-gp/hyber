@@ -15,6 +15,7 @@ pub mod icon;
 pub mod label;
 pub mod root;
 pub mod button_view;
+pub mod checkbox;
 
 /// Enum that classifies the type of constraints that
 /// a parent imposes to its children
