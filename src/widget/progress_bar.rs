@@ -1,6 +1,4 @@
-use crate::event;
 use crate::event::Event;
-use crate::key_code::KeyCode;
 use crate::renderer::{Message, RenderInstruction};
 use crate::util::{Color, Queue, Vector2D};
 use crate::widget::{Layout, Widget};
@@ -9,63 +7,54 @@ use std::cell::RefCell;
 use std::rc::Weak;
 
 #[derive(Clone)]
-pub struct RootWidget {
+pub struct ProgressBarWidget {
     id: usize,
-    size: Vector2D,
-    original_size: Vector2D,
+    progress: f64,
+    font_size: usize,
     background_color: Color,
-    message_incremented: Box<dyn Message>,
-    layout: Layout,
+    foreground_color: Color,
     dirty: bool,
     children: Vec<Weak<RefCell<dyn Widget>>>,
+    position: Vector2D,
+    size: Vector2D,
+    original_size: Vector2D,
+    layout: Layout,
+    offset: Vector2D,
 }
 
-impl RootWidget {
+impl ProgressBarWidget {
     pub fn new(
         size: Vector2D,
+        font_size: usize,
+        progress: f64,
         background_color: Color,
-        layout: Layout,
-        message_incremented: Box<dyn Message>,
-    ) -> RootWidget {
-        RootWidget {
+        foreground_color: Color,
+    ) -> ProgressBarWidget {
+        ProgressBarWidget {
             id: 0,
-            size: size,
-            original_size: size,
+            font_size: font_size,
+            progress: progress,
             background_color: background_color,
-            layout: layout,
-            message_incremented: message_incremented,
+            foreground_color: foreground_color,
             dirty: true,
             children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
+            position: Vector2D::new(0., 0.),
+            size: size,
+            original_size: size,
+            layout: Layout::None,
+            offset: Vector2D::new(0., 0.),
         }
+    }
+
+    pub fn set_progress(&mut self, value: f64)
+    {
+        self.progress = value;
+        self.dirty = true;
     }
 }
 
-impl Widget for RootWidget {
-    fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
-        match event {
-            event::Event::Keyboard(event::Keyboard::KeyPressed {
-                key_code: KeyCode::I,
-                modifiers:
-                    event::ModifiersState {
-                        shift: false,
-                        control: false,
-                        alt: false,
-                        logo: false,
-                    },
-            }) => {
-                let mut message = self.message_incremented.clone();
-                message.set_event(event);
-                messages.enqueue(message);
-            }
-            _ => {
-                for value in self.children.iter_mut() {
-                    if let Some(child) = value.upgrade() {
-                        child.borrow_mut().on_event(event, messages);
-                    }
-                }
-            }
-        }
-    }
+impl Widget for ProgressBarWidget {
+    fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {}
 
     fn set_id(&mut self, id: usize) {
         self.id = id;
@@ -76,10 +65,22 @@ impl Widget for RootWidget {
     }
 
     fn recipe(&self) -> Vec<RenderInstruction> {
-        // TODO: Debater se isto deve ser usado como clear do ecrã.
-        vec![RenderInstruction::Clear {
-            color: self.background_color,
-        }]
+        let progress_perc = Vector2D::new(self.original_size.x * (self.progress/100.0),self.original_size.y);
+        
+        vec![
+            // Progress bar rectangle.
+            RenderInstruction::DrawRect {
+                point: self.position,
+                color: self.background_color.clone(),
+                size: self.original_size,
+            },
+            // Background progress bar rectangle.
+            RenderInstruction::DrawRect {
+                point: self.position,
+                color: self.foreground_color.clone(),
+                size: progress_perc,
+            },
+        ]
     }
 
     fn set_dirty(&mut self, value: bool) {
@@ -99,24 +100,22 @@ impl Widget for RootWidget {
     }
 
     fn position(&mut self) -> Vector2D {
-        Vector2D::new(0., 0.)
+        self.position
     }
 
     fn size(&mut self) -> Vector2D {
         self.size
     }
-
     fn original_size(&mut self) -> Vector2D {
         self.original_size
     }
 
     fn layout(&mut self) -> &Layout {
-        // TODO: Ver se faz sentido ser só vertical
         &self.layout
     }
 
     fn offset(&mut self) -> Vector2D {
-        Vector2D::new(0., 0.)
+        self.offset
     }
 
     fn get_fields(
@@ -133,15 +132,17 @@ impl Widget for RootWidget {
         (
             self.dirty,
             &mut self.children,
-            Vector2D::new(0., 0.),
+            self.position,
             self.size,
             self.original_size,
             &self.layout,
-            Vector2D::new(0., 0.),
+            self.offset,
         )
     }
 
-    fn set_position(&mut self, _position: Vector2D) {}
+    fn set_position(&mut self, position: Vector2D) {
+        self.position = position;
+    }
 
     fn set_size(&mut self, size: Vector2D) {
         self.dirty = true;
@@ -153,5 +154,7 @@ impl Widget for RootWidget {
         self.original_size = size;
     }
 
-    fn set_offset(&mut self, _offset: Vector2D) {}
+    fn set_offset(&mut self, offset: Vector2D) {
+        self.offset = offset;
+    }
 }

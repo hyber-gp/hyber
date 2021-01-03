@@ -11,6 +11,7 @@ use std::rc::Weak;
 
 pub mod list_view;
 pub mod grid_view;
+pub mod progress_bar;
 pub mod icon;
 pub mod label;
 pub mod root;
