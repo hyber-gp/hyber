@@ -65,6 +65,8 @@ pub trait Widget {
     fn set_id(&mut self, id: usize);
     fn id(&self) -> usize;
 
+    fn is_cursor_inside(&mut self, cursor_pos : Vector2D) -> bool;
+
     /// @tofulynx
     /// this returns the "recipe" of the widget. In other words,
     /// it returns the collection of Instructions that tell the

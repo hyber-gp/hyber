@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::rc::Weak;
 use std::time::Instant;
 
-const ON_LONG_PRESS_TIME: u128 = 500;
+const ON_LONG_PRESS_TIME: u128 = 300;
 
 #[derive(Clone)]
 pub struct TabWidget {
@@ -22,8 +22,7 @@ pub struct TabWidget {
     layout: Layout,
     offset: Vector2D,
     on_press: Option<Box<dyn Message>>,
-    tab_moved_left: Option<Box<dyn Message>>,
-    tab_moved_right: Option<Box<dyn Message>>,
+    tab_moved: Option<Box<dyn Message>>,
     is_pressed: bool, 
     click_time: Instant, 
     cursor_pos: Vector2D, 
@@ -34,8 +33,7 @@ impl TabWidget {
         size: Vector2D,
         background_color: Color,
         on_press: Option<Box<dyn Message>>,
-        tab_moved_left: Option<Box<dyn Message>>,
-        tab_moved_right: Option<Box<dyn Message>>,
+        tab_moved: Option<Box<dyn Message>>,
     ) -> TabWidget {
         TabWidget {
             id: 0,
@@ -48,8 +46,7 @@ impl TabWidget {
             layout: Layout::None,
             offset: Vector2D::new(0., 0.),
             on_press: on_press,
-            tab_moved_left: tab_moved_left,
-            tab_moved_right:tab_moved_right,
+            tab_moved: tab_moved,
             is_pressed: false,
             click_time: Instant::now(),
             cursor_pos: Vector2D::new(-1.,-1.),
@@ -61,15 +58,12 @@ impl TabWidget {
             true
         } else{
             false
-        }
-       
+        }  
     }
-    pub fn setNewMessageMoveLeft(&mut self, newMessage:Option<Box<dyn Message>>){
-        self.tab_moved_left = newMessage;
+    pub fn setNewMessageMove(&mut self, newMessage:Option<Box<dyn Message>>){
+        self.tab_moved = newMessage;
     }
-    pub fn setNewMessageMoveRight(&mut self, newMessage:Option<Box<dyn Message>>){
-        self.tab_moved_right = newMessage;
-    }
+  
 
     pub fn get_moved_cursor_pos(&mut self) -> Vector2D{
         self.moved_cursor_pos
@@ -111,19 +105,9 @@ impl Widget for TabWidget {
                     if self.click_time.elapsed().as_millis() > ON_LONG_PRESS_TIME{
                         self.moved_cursor_pos.x = self.cursor_pos.x;
                         self.moved_cursor_pos.y = self.cursor_pos.y;
-                        //Check if moved to the left or to the right
-                        if self.moved_cursor_pos.x < self.position().x{
-                            if let Some(mut message) = self.tab_moved_left.clone() {
-                                message.set_event(event);
-                                messages.enqueue(message);
-                                println!("Tab Moved left!");
-                            }
-                        }else{
-                            if let Some(mut message) = self.tab_moved_right.clone() {
-                                message.set_event(event);
-                                messages.enqueue(message);
-                                println!("Tab Moved Right!");
-                            }
+                        if let Some(mut message) = self.tab_moved.clone() {
+                            message.set_event(event);
+                            messages.enqueue(message);
                         }
                     }  
                     self.is_pressed= false;
@@ -161,7 +145,19 @@ impl Widget for TabWidget {
 
 
     fn set_dirty(&mut self, value: bool) {
-        self.dirty = value;
+        if value {
+            self.dirty = true;
+            for value in self.get_children() {
+                if let Some(child) = value.upgrade() {
+                    if child.borrow_mut().is_dirty() {
+                        break;
+                    }
+                    else {
+                        child.borrow_mut().set_dirty(true);
+                    }
+                }
+            }
+        } else {self.dirty = false;}
     }
 
     fn is_dirty(&self) -> bool {
@@ -234,6 +230,14 @@ impl Widget for TabWidget {
 
     fn set_offset(&mut self, offset: Vector2D) {
         self.offset = offset;
+    }
+
+    fn is_cursor_inside(&mut self, cursor_pos : Vector2D) -> bool {
+        if (self.position.x + self.size.x) >= cursor_pos.x && (self.position.y + self.size.y) >= cursor_pos.y && self.position.x <=cursor_pos.x && self.position.y <=cursor_pos.y  {
+            true
+        } else{
+            false
+        }  
     }
 
 
