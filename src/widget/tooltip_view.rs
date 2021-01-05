@@ -14,6 +14,7 @@ use std::rc::Weak;
 pub struct TooltipViewWidget {
     id: usize,
     size: Vector2D,
+    position: Vector2D,
     original_size: Vector2D,
     layout: Layout,
     cursor_pos: Vector2D, // State
@@ -35,6 +36,7 @@ impl TooltipViewWidget {
             id: 0,
             size: size,
             original_size: size,
+            position: Vector2D::new(0., 0.),
             cursor_pos: Vector2D::new(-1., -1.),
             layout: Layout::Box(Axis::Vertical),
             dirty: true,
@@ -160,7 +162,7 @@ impl Widget for TooltipViewWidget {
     }
 
     fn position(&mut self) -> Vector2D {
-        Vector2D::new(0., 0.)
+        self.position
     }
 
     fn size(&mut self) -> Vector2D {
@@ -202,7 +204,9 @@ impl Widget for TooltipViewWidget {
         )
     }
 
-    fn set_position(&mut self, _position: Vector2D) {}
+    fn set_position(&mut self, position: Vector2D) {
+        self.position = position;
+    }
 
     fn set_size(&mut self, size: Vector2D) {
         self.set_dirty(true);

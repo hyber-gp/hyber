@@ -241,7 +241,6 @@ pub trait Renderer<D, E> {
 
                     // Chamar build do absolute
                     if let Some(absolute_widgets) = absolute_widget_collection_ptr.upgrade() {
-                        println!("tamanho: {}", absolute_widgets.borrow_mut().widgets.len());
                         for (id, (value, position, size)) in
                             absolute_widgets.borrow_mut().widgets.iter()
                         {
