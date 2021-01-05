@@ -70,6 +70,8 @@ impl Widget for LabelWidget {
                 point: self.position,
                 color: self.background_color.clone(),
                 size: self.size,
+                clip_point: self.position,
+                clip_size: self.size,
             },
             // Label Text
             RenderInstruction::DrawText {
@@ -77,6 +79,8 @@ impl Widget for LabelWidget {
                 color: self.foreground_color,
                 font_size: self.font_size,
                 string: self.text.clone(),
+                clip_point: self.position,
+                clip_size: self.size,
             },
         ]
     }

@@ -302,7 +302,7 @@ pub trait Widget {
         }
 
         // Get children, layout, and offset of widget
-        let (_, children, _, size, original_size, layout, offset) = self.get_fields();
+        let (_, children, _, size, _, layout, offset) = self.get_fields();
 
         match layout {
             Layout::Box(axis) => {

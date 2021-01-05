@@ -26,7 +26,12 @@ pub enum RenderInstruction {
     /// Instruction to the Render that a point needs to be drawn on the next Clipping
     /// The point should be rendered on absolute coordinates (x,y)
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
-    DrawPoint { point: Vector2D, color: Color },
+    DrawPoint {
+        point: Vector2D,
+        color: Color,
+        clip_point: Vector2D,
+        clip_size: Vector2D,
+    },
 
     /// Instruction to the Render that a line needs to be drawn on the next Clipping
     /// The line should be rendered on absolute coordinates from (x1, y1) to (x2, y2)
@@ -35,6 +40,8 @@ pub enum RenderInstruction {
         point_a: Vector2D,
         point_b: Vector2D,
         color: Color,
+        clip_point: Vector2D,
+        clip_size: Vector2D,
     },
 
     /// Instruction to the Render that an arc needs to be drawn on the next Clipping
@@ -47,6 +54,8 @@ pub enum RenderInstruction {
         s_ang: usize,
         e_ang: usize,
         color: Color,
+        clip_point: Vector2D,
+        clip_size: Vector2D,
     },
 
     /// Instruction to the Render that a circle needs to be drawn on the next Clipping
@@ -57,6 +66,8 @@ pub enum RenderInstruction {
         point: Vector2D,
         r: usize,
         color: Color,
+        clip_point: Vector2D,
+        clip_size: Vector2D,
     },
     /// Instruction to the Render that a rectangle needs to be drawn on the next Clipping
     /// The rectangle should be rendered on absolute coordinates (x, y) with 'l' length
@@ -67,6 +78,8 @@ pub enum RenderInstruction {
         point: Vector2D,
         size: Vector2D,
         color: Color,
+        clip_point: Vector2D,
+        clip_size: Vector2D,
     },
 
     /// Instruction to the Render that a triangle needs to be drawn on the next Clipping
@@ -78,6 +91,8 @@ pub enum RenderInstruction {
         point_b: Vector2D,
         point_c: Vector2D,
         color: Color,
+        clip_point: Vector2D,
+        clip_size: Vector2D,
     },
 
     /// Instruction to the Render that an image needs to be drawn on the next Clipping
@@ -87,6 +102,8 @@ pub enum RenderInstruction {
         point: Vector2D,
         path: String,
         options: DrawImageOptions,
+        clip_point: Vector2D,
+        clip_size: Vector2D,
     },
 
     /// Instruction to the Render that some text needs to be drawn on the next Clipping
@@ -96,6 +113,8 @@ pub enum RenderInstruction {
         font_size: usize,
         string: String,
         color: Color,
+        clip_point: Vector2D,
+        clip_size: Vector2D,
     },
 }
 
