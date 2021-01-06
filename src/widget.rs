@@ -9,12 +9,17 @@ use crate::util::Vector2D;
 use std::cell::RefCell;
 use std::rc::Weak;
 
-pub mod list_view;
 pub mod grid_view;
 pub mod icon;
 pub mod label;
+pub mod list_view;
 pub mod root;
 pub mod tab;
+pub mod button_view;
+pub mod checkbox;
+pub mod slider;
+pub mod textbox;
+pub mod tooltip_view;
 
 /// Enum that classifies the type of constraints that
 /// a parent imposes to its children
@@ -304,7 +309,7 @@ pub trait Widget {
         }
 
         // Get children, layout, and offset of widget
-        let (_, children, _, size, original_size, layout, offset) = self.get_fields();
+        let (_, children, _, size, _, layout, offset) = self.get_fields();
 
         match layout {
             Layout::Box(axis) => {

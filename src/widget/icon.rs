@@ -62,12 +62,16 @@ impl Widget for IconWidget {
                 point: self.position,
                 color: self.background_color.clone(),
                 size: self.size,
+                clip_point: self.position,
+                clip_size: self.size,
             },
             // Icon Image
             RenderInstruction::DrawImage {
                 point: self.position, // todo: CHANGE after testing
                 path: self.path.clone(),
                 options: self.options.clone(),
+                clip_point: self.position,
+                clip_size: self.size,
             },
         ]
     }
