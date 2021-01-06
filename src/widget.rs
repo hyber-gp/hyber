@@ -14,6 +14,7 @@ pub mod icon;
 pub mod label;
 pub mod list_view;
 pub mod root;
+pub mod tab;
 pub mod button_view;
 pub mod checkbox;
 pub mod slider;
@@ -68,6 +69,8 @@ pub trait Widget {
     /// TODO: documentar
     fn set_id(&mut self, id: usize);
     fn id(&self) -> usize;
+
+    fn is_cursor_inside(&mut self, cursor_pos : Vector2D) -> bool;
 
     /// @tofulynx
     /// this returns the "recipe" of the widget. In other words,
