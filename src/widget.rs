@@ -14,6 +14,10 @@ pub mod icon;
 pub mod label;
 pub mod list_view;
 pub mod root;
+pub mod button_view;
+pub mod checkbox;
+pub mod slider;
+pub mod textbox;
 pub mod tooltip_view;
 
 /// Enum that classifies the type of constraints that
