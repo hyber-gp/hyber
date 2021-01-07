@@ -1,4 +1,6 @@
+use crate::event;
 use crate::event::Event;
+use crate::key_code::KeyCode;
 use crate::renderer::{Message, RenderInstruction};
 use crate::util::{Color, Queue, Vector2D};
 use crate::widget::{Layout, Widget};

@@ -14,7 +14,6 @@ pub struct RootWidget {
     size: Vector2D,
     original_size: Vector2D,
     background_color: Color,
-    message_incremented: Box<dyn Message>,
     layout: Layout,
     dirty: bool,
     children: Vec<Weak<RefCell<dyn Widget>>>,
@@ -25,7 +24,6 @@ impl RootWidget {
         size: Vector2D,
         background_color: Color,
         layout: Layout,
-        message_incremented: Box<dyn Message>,
     ) -> RootWidget {
         RootWidget {
             id: 0,
@@ -33,7 +31,6 @@ impl RootWidget {
             original_size: size,
             background_color: background_color,
             layout: layout,
-            message_incremented: message_incremented,
             dirty: true,
             children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
         }
@@ -43,20 +40,6 @@ impl RootWidget {
 impl Widget for RootWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
         match event {
-            event::Event::Keyboard(event::Keyboard::KeyPressed {
-                key_code: KeyCode::I,
-                modifiers:
-                    event::ModifiersState {
-                        shift: false,
-                        control: false,
-                        alt: false,
-                        logo: false,
-                    },
-            }) => {
-                let mut message = self.message_incremented.clone();
-                message.set_event(event);
-                messages.enqueue(message);
-            }
             _ => {
                 for value in self.children.iter_mut() {
                     if let Some(child) = value.upgrade() {
