@@ -53,7 +53,7 @@ impl LabelWidget {
 }
 
 impl Widget for LabelWidget {
-    fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {}
+    fn on_event(&mut self, _event: Event, _messages: &mut Queue<Box<dyn Message>>) {}
 
     fn set_id(&mut self, id: usize) {
         self.id = id;

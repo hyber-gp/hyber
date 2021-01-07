@@ -1,6 +1,6 @@
 use crate::event;
 use crate::event::Event;
-use crate::renderer::{DrawImageOptions, Message, RenderInstruction};
+use crate::renderer::{Message, RenderInstruction};
 use crate::util::{Color, Queue, Vector2D};
 use crate::widget::{Layout, Widget};
 
@@ -23,9 +23,9 @@ pub struct TabWidget {
     offset: Vector2D,
     on_press: Option<Box<dyn Message>>,
     tab_moved: Option<Box<dyn Message>>,
-    is_pressed: bool, 
-    click_time: Instant, 
-    cursor_pos: Vector2D, 
+    is_pressed: bool,
+    click_time: Instant,
+    cursor_pos: Vector2D,
     moved_cursor_pos: Vector2D,
 }
 impl TabWidget {
@@ -49,23 +49,27 @@ impl TabWidget {
             tab_moved: tab_moved,
             is_pressed: false,
             click_time: Instant::now(),
-            cursor_pos: Vector2D::new(-1.,-1.),
-            moved_cursor_pos: Vector2D::new(-1.,-1.),
+            cursor_pos: Vector2D::new(-1., -1.),
+            moved_cursor_pos: Vector2D::new(-1., -1.),
         }
     }
     fn is_mouse_inside(&mut self) -> bool {
-        if (self.position.x + self.size.x) >= self.cursor_pos.x && (self.position.y + self.size.y) >= self.cursor_pos.y && self.position.x <=self.cursor_pos.x && self.position.y <=self.cursor_pos.y  {
+        if (self.position.x + self.size.x) >= self.cursor_pos.x
+            && (self.position.y + self.size.y) >= self.cursor_pos.y
+            && self.position.x <= self.cursor_pos.x
+            && self.position.y <= self.cursor_pos.y
+        {
             true
-        } else{
+        } else {
             false
-        }  
+        }
     }
-    pub fn setNewMessageMove(&mut self, newMessage:Option<Box<dyn Message>>){
-        self.tab_moved = newMessage;
-    }
-  
 
-    pub fn get_moved_cursor_pos(&mut self) -> Vector2D{
+    pub fn set_new_message_move(&mut self, new_message: Option<Box<dyn Message>>) {
+        self.tab_moved = new_message;
+    }
+
+    pub fn get_moved_cursor_pos(&mut self) -> Vector2D {
         self.moved_cursor_pos
     }
 }
@@ -73,7 +77,10 @@ impl TabWidget {
 impl Widget for TabWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
         match event {
-            event::Event::Mouse(event::Mouse::CursorMoved { x: x_mouse, y: y_mouse }) => {
+            event::Event::Mouse(event::Mouse::CursorMoved {
+                x: x_mouse,
+                y: y_mouse,
+            }) => {
                 self.cursor_pos.x = x_mouse as f64;
                 self.cursor_pos.y = y_mouse as f64;
                 for value in self.children.iter_mut() {
@@ -84,14 +91,14 @@ impl Widget for TabWidget {
             }
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
                 //CHECK IF INSIDE THE TAB
-                if self.is_mouse_inside(){
-                    self.is_pressed= true;
-                    self.click_time  = Instant::now();
+                if self.is_mouse_inside() {
+                    self.is_pressed = true;
+                    self.click_time = Instant::now();
                 }
             }
             event::Event::Mouse(event::Mouse::ButtonReleased(event::MouseButton::Left)) => {
-                if self.is_pressed{
-                    if self.is_mouse_inside(){
+                if self.is_pressed {
+                    if self.is_mouse_inside() {
                         //Tab pressed
                         if self.click_time.elapsed().as_millis() < ON_LONG_PRESS_TIME {
                             if let Some(mut message) = self.on_press.clone() {
@@ -99,18 +106,18 @@ impl Widget for TabWidget {
                                 messages.enqueue(message);
                                 println!("Press");
                             }
-                        }    
+                        }
                     }
                     //TAB MOVED
-                    if self.click_time.elapsed().as_millis() > ON_LONG_PRESS_TIME{
+                    if self.click_time.elapsed().as_millis() > ON_LONG_PRESS_TIME {
                         self.moved_cursor_pos.x = self.cursor_pos.x;
                         self.moved_cursor_pos.y = self.cursor_pos.y;
                         if let Some(mut message) = self.tab_moved.clone() {
                             message.set_event(event);
                             messages.enqueue(message);
                         }
-                    }  
-                    self.is_pressed= false;
+                    }
+                    self.is_pressed = false;
                 }
             }
             _ => {
@@ -132,17 +139,17 @@ impl Widget for TabWidget {
     }
 
     fn recipe(&self) -> Vec<RenderInstruction> {
-            vec![
-                // Tab rectangle
-                RenderInstruction::DrawRect {
-                    point: self.position,
-                    color: self.background_color.clone(),
-                    size: self.size,
-                }
-            ]  
+        vec![
+            // Tab rectangle
+            RenderInstruction::DrawRect {
+                point: self.position,
+                color: self.background_color.clone(),
+                size: self.size,
+                clip_point: self.position,
+                clip_size: self.size,
+            },
+        ]
     }
-    
-
 
     fn set_dirty(&mut self, value: bool) {
         if value {
@@ -151,13 +158,14 @@ impl Widget for TabWidget {
                 if let Some(child) = value.upgrade() {
                     if child.borrow_mut().is_dirty() {
                         break;
-                    }
-                    else {
+                    } else {
                         child.borrow_mut().set_dirty(true);
                     }
                 }
             }
-        } else {self.dirty = false;}
+        } else {
+            self.dirty = false;
+        }
     }
 
     fn is_dirty(&self) -> bool {
@@ -232,13 +240,15 @@ impl Widget for TabWidget {
         self.offset = offset;
     }
 
-    fn is_cursor_inside(&mut self, cursor_pos : Vector2D) -> bool {
-        if (self.position.x + self.size.x) >= cursor_pos.x && (self.position.y + self.size.y) >= cursor_pos.y && self.position.x <=cursor_pos.x && self.position.y <=cursor_pos.y  {
+    fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
+        if (self.position.x + self.size.x) >= cursor_pos.x
+            && (self.position.y + self.size.y) >= cursor_pos.y
+            && self.position.x <= cursor_pos.x
+            && self.position.y <= cursor_pos.y
+        {
             true
-        } else{
+        } else {
             false
-        }  
+        }
     }
-
-
 }

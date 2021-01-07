@@ -219,4 +219,16 @@ impl Widget for TooltipViewWidget {
     }
 
     fn set_offset(&mut self, _offset: Vector2D) {}
+
+    fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
+        if (self.position.x + self.size.x) >= cursor_pos.x
+            && (self.position.y + self.size.y) >= cursor_pos.y
+            && self.position.x <= cursor_pos.x
+            && self.position.y <= cursor_pos.y
+        {
+            true
+        } else {
+            false
+        }
+    }
 }

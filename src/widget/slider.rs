@@ -226,6 +226,8 @@ impl Widget for SliderWidget {
                     point: self.position,
                     color: self.background_color,
                     size: self.size,
+                    clip_point: self.position,
+                    clip_size: self.size,
                 },
                 RenderInstruction::DrawRect {
                     point: Vector2D::new(
@@ -234,6 +236,8 @@ impl Widget for SliderWidget {
                     ),
                     color: self.button_color,
                     size: self.button_size,
+                    clip_point: self.position,
+                    clip_size: self.size,
                 },
             ]
         } else {
@@ -242,6 +246,8 @@ impl Widget for SliderWidget {
                     point: self.position,
                     color: self.background_color,
                     size: self.size,
+                    clip_point: self.position,
+                    clip_size: self.size,
                 },
                 RenderInstruction::DrawRect {
                     point: Vector2D::new(
@@ -251,6 +257,8 @@ impl Widget for SliderWidget {
                     ),
                     color: self.button_color,
                     size: self.button_size,
+                    clip_point: self.position,
+                    clip_size: self.size,
                 },
             ]
         }
@@ -336,5 +344,17 @@ impl Widget for SliderWidget {
 
     fn set_offset(&mut self, offset: Vector2D) {
         self.offset = offset;
+    }
+
+    fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
+        if (self.position.x + self.size.x) >= cursor_pos.x
+            && (self.position.y + self.size.y) >= cursor_pos.y
+            && self.position.x <= cursor_pos.x
+            && self.position.y <= cursor_pos.y
+        {
+            true
+        } else {
+            false
+        }
     }
 }

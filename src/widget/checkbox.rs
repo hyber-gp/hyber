@@ -122,6 +122,8 @@ impl Widget for CheckBoxWidget {
                     point: self.position,
                     color: self.selected_color,
                     size: self.size,
+                    clip_point: self.position,
+                    clip_size: self.size,
                 },
                 RenderInstruction::DrawRect {
                     point: Vector2D::new(
@@ -133,6 +135,8 @@ impl Widget for CheckBoxWidget {
                         self.size.x - (2. * (self.size.x * self.selected_relative_size)),
                         self.size.y - (2. * (self.size.y * self.selected_relative_size)),
                     ),
+                    clip_point: self.position,
+                    clip_size: self.size,
                 },
             ]
         } else {
@@ -141,6 +145,8 @@ impl Widget for CheckBoxWidget {
                     point: self.position,
                     color: Color::from_hex(0xFF000000),
                     size: self.size,
+                    clip_point: self.position,
+                    clip_size: self.size,
                 },
                 RenderInstruction::DrawRect {
                     point: Vector2D::new(
@@ -152,6 +158,8 @@ impl Widget for CheckBoxWidget {
                         self.size.x - (2. * self.border_size),
                         self.size.y - (2. * self.border_size),
                     ),
+                    clip_point: self.position,
+                    clip_size: self.size,
                 },
             ]
         }
@@ -230,5 +238,17 @@ impl Widget for CheckBoxWidget {
 
     fn set_offset(&mut self, offset: Vector2D) {
         self.offset = offset;
+    }
+
+    fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
+        if (self.position.x + self.size.x) >= cursor_pos.x
+            && (self.position.y + self.size.y) >= cursor_pos.y
+            && self.position.x <= cursor_pos.x
+            && self.position.y <= cursor_pos.y
+        {
+            true
+        } else {
+            false
+        }
     }
 }

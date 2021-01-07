@@ -136,7 +136,7 @@ impl Widget for GridViewWidget {
 
     fn set_offset(&mut self, _offset: Vector2D) {}
 
-    fn is_cursor_inside(&mut self, cursor_pos : Vector2D) -> bool {
+    fn is_cursor_inside(&mut self, _cursor_pos : Vector2D) -> bool {
       false 
     }
 }

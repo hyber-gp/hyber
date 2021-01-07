@@ -6,7 +6,6 @@ use crate::widget::{Layout, Widget};
 
 use std::cell::RefCell;
 use std::rc::Weak;
-use std::time::Instant;
 
 const ON_LONG_PRESS_TIME: u128 = 500;
 
@@ -69,7 +68,7 @@ impl TextBoxWidget {
         }
     }
 
-    pub fn set_message(&mut self, on_text_change: Option<Box<dyn Message>>){
+    pub fn set_message(&mut self, on_text_change: Option<Box<dyn Message>>) {
         self.on_text_change = on_text_change;
     }
 }
@@ -88,7 +87,7 @@ impl Widget for TextBoxWidget {
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
                 if self.is_mouse_inside() {
                     self.is_focused = true;
-                }else{
+                } else {
                     self.is_focused = false;
                 }
             }
@@ -130,22 +129,34 @@ impl Widget for TextBoxWidget {
 
     fn recipe(&self) -> Vec<RenderInstruction> {
         vec![
-            RenderInstruction::DrawRect{
+            RenderInstruction::DrawRect {
                 point: self.position,
                 size: self.size,
                 color: Color::from_hex(0xFF000000),
+                clip_point: self.position,
+                clip_size: self.size,
             },
-            RenderInstruction::DrawRect{
-                point: Vector2D::new(self.position.x+self.border_thickness,self.position.y+self.border_thickness),
-                size: Vector2D::new(self.size.x-(2.*self.border_thickness),self.size.y-(2.*self.border_thickness)),
+            RenderInstruction::DrawRect {
+                point: Vector2D::new(
+                    self.position.x + self.border_thickness,
+                    self.position.y + self.border_thickness,
+                ),
+                size: Vector2D::new(
+                    self.size.x - (2. * self.border_thickness),
+                    self.size.y - (2. * self.border_thickness),
+                ),
                 color: self.background_color,
+                clip_point: self.position,
+                clip_size: self.size,
             },
-            RenderInstruction::DrawText{
-                point: Vector2D::new(self.position.x+10.,self.position.y+20.),
+            RenderInstruction::DrawText {
+                point: Vector2D::new(self.position.x + 10., self.position.y + 20.),
                 font_size: 22,
                 string: self.text.clone(),
                 color: self.text_color,
-            }
+                clip_point: self.position,
+                clip_size: self.size,
+            },
         ]
     }
 
@@ -222,5 +233,17 @@ impl Widget for TextBoxWidget {
 
     fn set_offset(&mut self, offset: Vector2D) {
         self.offset = offset;
+    }
+
+    fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
+        if (self.position.x + self.size.x) >= cursor_pos.x
+            && (self.position.y + self.size.y) >= cursor_pos.y
+            && self.position.x <= cursor_pos.x
+            && self.position.y <= cursor_pos.y
+        {
+            true
+        } else {
+            false
+        }
     }
 }
