@@ -13,6 +13,7 @@ pub mod grid_view;
 pub mod icon;
 pub mod label;
 pub mod list_view;
+pub mod panel;
 pub mod root;
 pub mod tab;
 pub mod button_view;
@@ -32,6 +33,12 @@ pub enum ConstraintType {
 pub enum Num {
     Num(usize),
     Infinity,
+}
+
+// TODO: ver (??)
+pub enum Animation {
+    Reveal,
+    Push,
 }
 
 /// TODO: Documentar
@@ -310,6 +317,7 @@ pub trait Widget {
 
         // Get children, layout, and offset of widget
         let (_, children, _, size, _, layout, offset) = self.get_fields();
+
 
         match layout {
             Layout::Box(axis) => {
