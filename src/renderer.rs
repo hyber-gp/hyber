@@ -51,8 +51,7 @@ pub enum RenderInstruction {
         /// The clipping area start point, on a two-dimensional space - window's 
         /// upper left corner
         clip_point: Vector2D,
-        /// The clipping area end point, on a two-dimensional space - window's 
-        /// bottom right corner
+        /// The clipping area size, width and height
         clip_size: Vector2D,
     },
 
@@ -67,8 +66,7 @@ pub enum RenderInstruction {
         /// The clipping area start point, on a two-dimensional space - window's 
         /// upper left corner
         clip_point: Vector2D,
-        /// The clipping area end point, on a two-dimensional space - window's 
-        /// bottom right corner
+        /// The clipping area size, width and height
         clip_size: Vector2D,
     },
 
@@ -87,8 +85,7 @@ pub enum RenderInstruction {
         /// The clipping area start point, on a two-dimensional space - window's 
         /// upper left corner
         clip_point: Vector2D,
-        /// The clipping area end point, on a two-dimensional space - window's 
-        /// bottom right corner
+        /// The clipping area size, width and height
         clip_size: Vector2D,
     },
 
@@ -103,8 +100,7 @@ pub enum RenderInstruction {
         /// The clipping area start point, on a two-dimensional space - window's 
         /// upper left corner
         clip_point: Vector2D,
-        /// The clipping area end point, on a two-dimensional space - window's 
-        /// bottom right corner
+        /// The clipping area size, width and height
         clip_size: Vector2D,
     },
 
@@ -119,8 +115,7 @@ pub enum RenderInstruction {
         /// The clipping area start point, on a two-dimensional space - window's 
         /// upper left corner
         clip_point: Vector2D,
-        /// The clipping area end point, on a two-dimensional space - window's 
-        /// bottom right corner
+        /// The clipping area size, width and height
         clip_size: Vector2D,
     },
 
@@ -137,8 +132,7 @@ pub enum RenderInstruction {
         /// The clipping area start point, on a two-dimensional space - window's 
         /// upper left corner
         clip_point: Vector2D,
-        /// The clipping area end point, on a two-dimensional space - window's 
-        /// bottom right corner
+        /// The clipping area size, width and height
         clip_size: Vector2D,
     },
 
@@ -153,8 +147,7 @@ pub enum RenderInstruction {
         /// The clipping area start point, on a two-dimensional space - window's 
         /// upper left corner
         clip_point: Vector2D,
-        /// The clipping area end point, on a two-dimensional space - window's 
-        /// bottom right corner
+        /// The clipping area size, width and height
         clip_size: Vector2D,
     },
 
@@ -173,8 +166,7 @@ pub enum RenderInstruction {
         /// The clipping area start point, on a two-dimensional space - window's 
         /// upper left corner
         clip_point: Vector2D,
-        /// The clipping area end point, on a two-dimensional space - window's 
-        /// bottom right corner
+        /// The clipping area size, width and height
         clip_size: Vector2D,
     },
 }

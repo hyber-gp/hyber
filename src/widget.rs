@@ -21,68 +21,129 @@ pub mod slider;
 pub mod textbox;
 pub mod tooltip_view;
 
-/// Enum that classifies the type of constraints that
-/// a parent imposes to its children
+/// Constraints that a parent imposes to its children
+///
+/// _**Note:** Based on Flutter documentation about constraints at 
+/// https://flutter.dev/docs/development/ui/layout/constraints
 pub enum ConstraintType {
-    Tight { size: Vector2D },
-    Loose { min: Vector2D, max: Vector2D },
+    /// The widget tells its child that it must be of a certain size
+    Tight { 
+        // The exact widget's size (width and height)
+        size: Vector2D 
+    },
+    /// The widget tells its child that it can be smaller than a certain size
+    Loose { 
+        // The minimum widget's size (width and height)
+        min: Vector2D, 
+        // The maximum widget's size (width and height)
+        max: Vector2D 
+    },
 }
 
-// TODO: Ver isto
-pub enum Num {
-    Num(usize),
-    Infinity,
-}
-
-/// TODO: Documentar
+/// Type of widget's layout
+///
+/// _**Note:** Based on Flutter documentation about sliver layout at 
+/// https://flutter.dev/docs/development/ui/advanced/slivers and based
+/// on Java documentation about layout components at 
+/// https://docs.oracle.com/javase/tutorial/uiswing/layout
 #[derive(Clone)]
 pub enum Layout {
+    /// Box layout either stacks its components on top of each other
+    /// or places them in a row
     Box(Axis),
+    /// Grid layout places components in a grid of cells
     Grid(Axis, usize),
+    /// Sliver layout is a portion of a scrollable area that can be 
+    /// defined to behave in a special way
     Sliver(Axis),
+    /// Layout undefined
     None,
 }
 
-/// TODO: Documentar
+/// Direction in which widgets are aligned
+///
+/// _**Note:** Based on Flutter documentation about the axis enum at 
+/// https://api.flutter.dev/flutter/painting/Axis-class.html
 #[derive(Clone)]
 pub enum Axis {
+    /// The widgets are aligned left and right
     Horizontal,
+    /// The widgets are aligned up and down
     Vertical,
 }
 
-/// TODO: DOCUMENTAR ISTO
-/// D é Display
-/// M é Message
+/// Widgets are part of a user interface. They can be rendered on the 
+/// display and they can contain as many childs as they need. The root
+/// widget is at the top of the widget tree. He manages all the widgets
+/// to be displayed since they are childs of him. Then, all widgets 
+/// have their own child tree.
 pub trait Widget {
-    /// @diogosemedo
-    /// This function is needed to detect if the event is being done on this widget, update the state of
-    /// the widget based on event and place a message in the message queue.
+    /// Detect if the event is being done on this widget and then update the
+    /// widget's state based on event. After that, a message is enqueded into
+    /// the message queue.
     ///
     /// # Returns
-    /// An hyber Event
+    /// No returns
     ///
     /// # Arguments
     /// * `event` - an hyber event
     /// * `messages` - queue of messages
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>);
 
-    /// TODO: documentar
-    fn set_id(&mut self, id: usize);
+    /// Gets widget's identifier
+    ///
+    /// # Returns
+    /// The widget's identifier
+    ///
+    /// # Arguments
+    /// No arguments
     fn id(&self) -> usize;
 
+    /// Sets widget's identifier
+    ///
+    /// # Returns
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `id` - the identifier of the widget
+    fn set_id(&mut self, id: usize);
+
+    /// Detect if the cursor is in the widget's position
+    ///
+    /// # Returns
+    /// True, if the cursor is in the widget's position, false otherwise
+    ///
+    /// # Arguments
+    /// * `cursor_pos` - the position of the cursor
     fn is_cursor_inside(&mut self, cursor_pos : Vector2D) -> bool;
 
-    /// @tofulynx
-    /// this returns the "recipe" of the widget. In other words,
-    /// it returns the collection of Instructions that tell the
-    /// renderer how to draw this widget.
+    /// Gets the collection of renderer instructions needed to draw this widget
+    ///
+    /// # Returns
+    /// The collection of renderer instructions needed to draw this widget
+    ///
+    /// # Arguments
+    /// No arguments
     fn recipe(&self) -> Vec<RenderInstruction>;
 
-    /// @tofulynx
-    /// For internal use only. Called by build(). marks widget as clean - no need to be rebuilt!
+    /// Mark the widget as dirty
+    ///
+    /// An internal method to know which widgets need to be rebuilt
+    ///
+    /// # Returns
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `value` - the status to be assigned to the widget
     fn set_dirty(&mut self, value: bool);
 
-    /// TODO: documentar
+    /// Gets the widget dirty flag value
+    ///
+    /// # Returns
+    /// True, if the widget is mark as dirty, false otherwise
+    ///
+    /// # Arguments
+    /// No arguments
     fn is_dirty(&self) -> bool;
 
     /// Adds a widget as a child of the current widget
@@ -102,9 +163,13 @@ pub trait Widget {
     /// ```
     fn add_as_child(&mut self, child: Weak<RefCell<dyn Widget>>);
 
-    /// Returns a collection of children of the current widget
+    /// Gets the collection of children of the current widget
+    ///
+    /// # Returns
+    /// The collection of children of the current widget
     ///
     /// # Arguments
+    /// No arguments
     ///
     /// # Examples
     ///
@@ -120,28 +185,13 @@ pub trait Widget {
     /// ```
     fn get_children(&mut self) -> &mut Vec<Weak<RefCell<dyn Widget>>>;
 
-    /// Sets a widget as the parent of the current widget (For internal use only)
+    /// Gets the position of the widget's top left corner
+    ///
+    /// # Returns 
+    /// The position of the widget's top left corner
     ///
     /// # Arguments
-    /// `parent` - widget to be set as parent of the current widget
-    ///
-    /// # Examples
-    ///
-    /// Set a parent to the current widget
-    ///
-    /// ```no_run
-    /// impl Widget<Display, MessageQueue> for ExampleWidget {
-    ///     fn add_as_child(&mut self, child: &mut Self) {
-    ///         child.set_as_parent(self);
-    ///         ...
-    ///     }
-    /// }
-    /// ```
-    // fn set_as_parent(&mut self, parent: &mut Weak<RefCell<dyn Widget>>);
-
-    /// Returns the position of the topleft corner of the current widget
-    ///
-    /// # Arguments
+    /// No arguments
     ///
     /// # Examples
     ///
@@ -152,9 +202,13 @@ pub trait Widget {
     /// ```
     fn position(&mut self) -> Vector2D;
 
-    /// Returns the size of the current widget
+    /// Gets the widget's current size (width and height)
+    ///
+    /// # Returns 
+    /// The widget's current size (width and height)
     ///
     /// # Arguments
+    /// No arguments
     ///
     /// # Examples
     ///
@@ -165,9 +219,13 @@ pub trait Widget {
     /// ```
     fn size(&mut self) -> Vector2D;
 
-    /// Returns the original size of the current widget
+    /// Gets the widget's original size (width and height)
+    ///
+    /// # Returns 
+    /// The widget's original size (width and height)
     ///
     /// # Arguments
+    /// No arguments
     ///
     /// # Examples
     ///
@@ -178,9 +236,13 @@ pub trait Widget {
     /// ```
     fn original_size(&mut self) -> Vector2D;
 
-    /// Returns the layout of the current widget (For internal use only)
+    /// Gets the widget's layout
+    ///
+    /// # Returns 
+    /// The widget's layout
     ///
     /// # Arguments
+    /// No arguments
     ///
     /// # Examples
     ///
@@ -194,9 +256,13 @@ pub trait Widget {
     /// ```
     fn layout(&mut self) -> &Layout;
 
-    /// Returns the offset vector coordinates related with the margin in the current widget
+    /// Gets the offset vector coordinates related with the widget's margin
+    ///
+    /// # Returns 
+    /// The offset vector coordinates
     ///
     /// # Arguments
+    /// No arguments
     ///
     /// # Examples
     ///
@@ -210,7 +276,13 @@ pub trait Widget {
     /// ```
     fn offset(&mut self) -> Vector2D;
 
-    /// TODO: documentar
+    /// Gets some widget's attributes values
+    ///
+    /// # Returns 
+    /// The widget's attributes values
+    ///
+    /// # Arguments
+    /// No arguments
     fn get_fields(
         &mut self,
     ) -> (
@@ -223,11 +295,13 @@ pub trait Widget {
         Vector2D,
     );
 
-    /// Set the position of the topleft corner of the current widget
+    /// Sets the position of the widget's top left corner (x-position and y-position)
+    ///
+    /// # Returns 
+    /// No returns
     ///
     /// # Arguments
-    /// `x` - x-coordinate for the topleft corner
-    /// `y` - y-coordinate for the topleft corner
+    /// `position` - the position to be assigned to the widget
     ///
     /// # Examples
     ///
@@ -241,11 +315,13 @@ pub trait Widget {
     /// ```
     fn set_position(&mut self, position: Vector2D);
 
-    /// Sets the size of the current widget
+    /// Sets the widget's current size (width and height)
+    ///
+    /// # Returns 
+    /// No returns
     ///
     /// # Arguments
-    /// `width` - width for the current widget
-    /// `height` - height for the current widget
+    /// `size` - the size to be assigned to the widget
     ///
     /// # Examples
     ///
@@ -259,9 +335,22 @@ pub trait Widget {
     /// ```
     fn set_size(&mut self, size: Vector2D);
 
+    /// Sets the widget's original size (width and height)
+    ///
+    /// # Returns 
+    /// No returns
+    ///
+    /// # Arguments
+    /// `size` - the size to be assigned to the widget
     fn set_original_size(&mut self, size: Vector2D);
 
-    /// TODO: documentar
+    /// Sets the widget's offset vector coordinates according to his margins
+    ///
+    /// # Returns 
+    /// No returns
+    ///
+    /// # Arguments
+    /// `offset` - the offset to be assigned to the widget
     fn set_offset(&mut self, offset: Vector2D);
 
     /// Decomposes the layout constraints to the children of the current widget
