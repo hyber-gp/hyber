@@ -28,14 +28,14 @@ pub mod tooltip_view;
 pub enum ConstraintType {
     /// The widget tells its child that it must be of a certain size
     Tight { 
-        // The exact widget's size (width and height)
+        /// The exact widget's size (width and height)
         size: Vector2D 
     },
     /// The widget tells its child that it can be smaller than a certain size
     Loose { 
-        // The minimum widget's size (width and height)
+        /// The minimum widget's size (width and height)
         min: Vector2D, 
-        // The maximum widget's size (width and height)
+        /// The maximum widget's size (width and height)
         max: Vector2D 
     },
 }
