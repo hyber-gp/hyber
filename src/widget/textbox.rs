@@ -7,10 +7,6 @@ use crate::widget::{Layout, Widget};
 use std::cell::RefCell;
 use std::rc::Weak;
 
-/// Time required to press be considered long
-const ON_LONG_PRESS_TIME: u128 = 500;
-
-/// Textbox is a widget that allows the editing of a single line of text
 #[derive(Clone)]
 pub struct TextBoxWidget {
     /// The textbox's identifier
@@ -100,19 +96,6 @@ impl TextBoxWidget {
         }
     }
 
-    /// Not documented, check Drive.
-    fn is_mouse_inside(&mut self) -> bool {
-        if self.cursor_pos.x >= self.position.x
-            && self.cursor_pos.x <= (self.position.x + self.size.x)
-            && self.cursor_pos.y >= self.position.y
-            && self.cursor_pos.y <= (self.position.y + self.size.y)
-        {
-            true
-        } else {
-            false
-        }
-    }
-
     /// Sets the message to be handled when the textbox is focused
     ///
     /// # Returns
@@ -137,30 +120,12 @@ impl Widget for TextBoxWidget {
                 }
             }
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
-                if self.is_mouse_inside() {
+                if self.is_cursor_inside(self.cursor_pos) {
                     self.is_focused = true;
                 } else {
                     self.is_focused = false;
                 }
             }
-            /*event::Event::Mouse(event::Mouse::ButtonReleased(event::MouseButton::Left)) => {
-                if self.is_pressed {
-                    self.is_pressed = false;
-                    if self.is_mouse_inside() {
-                        if self.click_time.elapsed().as_millis() < ON_LONG_PRESS_TIME {
-                            if let Some(mut message) = self.on_press.clone() {
-                                message.set_event(event);
-                                messages.enqueue(message);
-                            }
-                        } else {
-                            if let Some(mut message) = self.on_long_press.clone() {
-                                message.set_event(event);
-                                messages.enqueue(message);
-                            }
-                        }
-                    }
-                }
-            }*/
             _ => {
                 for value in self.children.iter_mut() {
                     if let Some(child) = value.upgrade() {
@@ -288,10 +253,10 @@ impl Widget for TextBoxWidget {
     }
 
     fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
-        if (self.position.x + self.size.x) >= cursor_pos.x
-            && (self.position.y + self.size.y) >= cursor_pos.y
-            && self.position.x <= cursor_pos.x
-            && self.position.y <= cursor_pos.y
+        if cursor_pos.x >= self.position.x
+            && cursor_pos.x <= (self.position.x + self.size.x)
+            && cursor_pos.y >= self.position.y
+            && cursor_pos.y <= (self.position.y + self.size.y)
         {
             true
         } else {

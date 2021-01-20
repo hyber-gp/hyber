@@ -100,19 +100,6 @@ impl ButtonViewWidget {
         }
     }
 
-    /// Not documented, check Drive.
-    fn is_mouse_inside(&mut self) -> bool {
-        if self.cursor_pos.x >= self.position().x
-            && self.cursor_pos.x <= (self.position().x + self.size().x)
-            && self.cursor_pos.y >= self.position().y
-            && self.cursor_pos.y <= (self.position().y + self.size().y)
-        {
-            true
-        } else {
-            false
-        }
-    }
-
     /// Sets button's clickable attribute
     ///
     /// # Returns
@@ -138,7 +125,7 @@ impl Widget for ButtonViewWidget {
             }
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
                 if self.is_clickable && (self.on_press.is_some() || self.on_long_press.is_some()) {
-                    if self.is_mouse_inside() {
+                    if self.is_cursor_inside(self.cursor_pos) {
                         self.is_pressed = true;
                         self.click_time = Instant::now();
                     }
@@ -147,7 +134,7 @@ impl Widget for ButtonViewWidget {
             event::Event::Mouse(event::Mouse::ButtonReleased(event::MouseButton::Left)) => {
                 if self.is_pressed {
                     self.is_pressed = false;
-                    if self.is_mouse_inside() {
+                    if self.is_cursor_inside(self.cursor_pos) {
                         if self.click_time.elapsed().as_millis() < ON_LONG_PRESS_TIME {
                             if let Some(mut message) = self.on_press.clone() {
                                 message.set_event(event);
@@ -260,10 +247,10 @@ impl Widget for ButtonViewWidget {
     }
 
     fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
-        if (self.position.x + self.size.x) >= cursor_pos.x
-            && (self.position.y + self.size.y) >= cursor_pos.y
-            && self.position.x <= cursor_pos.x
-            && self.position.y <= cursor_pos.y
+        if cursor_pos.x >= self.position.x
+            && cursor_pos.x <= (self.position.x + self.size.x)
+            && cursor_pos.y >= self.position.y
+            && cursor_pos.y <= (self.position.y + self.size.y)
         {
             true
         } else {

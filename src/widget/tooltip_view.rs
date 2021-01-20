@@ -81,19 +81,6 @@ impl TooltipViewWidget {
             tooltip_widget: tooltip_widget,
         }
     }
-
-    /// Not documented, check Drive.
-    fn is_mouse_inside(&mut self) -> bool {
-        if self.cursor_pos.x >= self.position().x
-            && self.cursor_pos.x <= (self.position().x + self.size().x)
-            && self.cursor_pos.y >= self.position().y
-            && self.cursor_pos.y <= (self.position().y + self.size().y)
-        {
-            true
-        } else {
-            false
-        }
-    }
 }
 
 impl Widget for TooltipViewWidget {
@@ -103,7 +90,7 @@ impl Widget for TooltipViewWidget {
                 self.cursor_pos.x = x_pos as f64;
                 self.cursor_pos.y = y_pos as f64;
 
-                if self.is_mouse_inside() {
+                if self.is_cursor_inside(self.cursor_pos) {
                     if let Some(absolute_widget_collection) =
                         self.absolute_widget_collection_ptr.upgrade()
                     {
@@ -257,10 +244,10 @@ impl Widget for TooltipViewWidget {
     fn set_offset(&mut self, _offset: Vector2D) {}
 
     fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
-        if (self.position.x + self.size.x) >= cursor_pos.x
-            && (self.position.y + self.size.y) >= cursor_pos.y
-            && self.position.x <= cursor_pos.x
-            && self.position.y <= cursor_pos.y
+        if cursor_pos.x >= self.position.x
+            && cursor_pos.x <= (self.position.x + self.size.x)
+            && cursor_pos.y >= self.position.y
+            && cursor_pos.y <= (self.position.y + self.size.y)
         {
             true
         } else {

@@ -103,19 +103,6 @@ impl CheckBoxWidget {
         }
     }
 
-    /// Not documented, check Drive.
-    fn is_mouse_inside(&mut self) -> bool {
-        if self.cursor_pos.x >= self.position().x
-            && self.cursor_pos.x <= (self.position().x + self.size().x)
-            && self.cursor_pos.y >= self.position().y
-            && self.cursor_pos.y <= (self.position().y + self.size().y)
-        {
-            true
-        } else {
-            false
-        }
-    }
-
     /// Sets the message to be handled when the checkbox's `is_checked` value change
     ///
     /// # Returns
@@ -151,7 +138,7 @@ impl Widget for CheckBoxWidget {
                 }
             }
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
-                if self.is_mouse_inside() {
+                if self.is_cursor_inside(self.cursor_pos) {
                     if let Some(mut message) = self.on_change.clone() {
                         message.set_event(event);
                         messages.enqueue(message);
@@ -304,10 +291,10 @@ impl Widget for CheckBoxWidget {
     }
 
     fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
-        if (self.position.x + self.size.x) >= cursor_pos.x
-            && (self.position.y + self.size.y) >= cursor_pos.y
-            && self.position.x <= cursor_pos.x
-            && self.position.y <= cursor_pos.y
+        if cursor_pos.x >= self.position.x
+            && cursor_pos.x <= (self.position.x + self.size.x)
+            && cursor_pos.y >= self.position.y
+            && cursor_pos.y <= (self.position.y + self.size.y)
         {
             true
         } else {
