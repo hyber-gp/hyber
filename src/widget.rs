@@ -10,6 +10,7 @@ use std::cell::RefCell;
 use std::rc::Weak;
 
 pub mod grid_view;
+pub mod progress_bar;
 pub mod icon;
 pub mod label;
 pub mod list_view;
