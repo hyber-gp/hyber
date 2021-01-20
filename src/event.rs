@@ -3,16 +3,24 @@ use crate::key_code::KeyCode;
 /// The current state of the keyboard modifiers
 #[derive(Debug, Copy, Clone)]
 pub struct ModifiersState {
-    /// Whether a shift key is pressed
+    /// Whether a shift key is pressed 
+    ///
+    /// [default: false]
     pub shift: bool,
 
     /// Whether a control key is pressed
+    ///
+    /// [default: false]
     pub control: bool,
 
     /// Whether an alt key is pressed
+    ///
+    /// [default: false]
     pub alt: bool,
 
     /// Whether a logo key is pressed (e.g. windows key, command key...)
+    ///
+    /// [default: false]
     pub logo: bool,
 }
 
