@@ -70,6 +70,8 @@ impl Widget for PanelWidget {
                 point: self.position,
                 color: self.background_color.clone(),
                 size: self.size,
+                clip_point: self.position,
+                clip_size: self.size,
             },
             // Label Text
             RenderInstruction::DrawText {
@@ -77,6 +79,8 @@ impl Widget for PanelWidget {
                 color: self.foreground_color,
                 font_size: self.font_size,
                 string: self.text.clone(),
+                clip_point: self.position,
+                clip_size: self.size,
             },
         ]
     }
@@ -154,5 +158,9 @@ impl Widget for PanelWidget {
 
     fn set_offset(&mut self, offset: Vector2D) {
         self.offset = offset;
+    }
+
+    fn is_cursor_inside(&mut self, _cursor_pos: Vector2D) -> bool {
+        false
     }
 }
