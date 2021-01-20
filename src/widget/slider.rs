@@ -72,22 +72,6 @@ impl SliderWidget {
         }
     }
 
-    fn is_mouse_inside(&mut self) -> bool {
-        let button_upper_left_corner_x =
-            self.slider_positions[self.slider_index].x_coordinate - (self.button_size.x * 0.5);
-        let button_upper_left_corner_y =
-            self.position.y + (self.size.y * 0.5) - (self.button_size.y * 0.5);
-        if self.cursor_pos.x >= button_upper_left_corner_x
-            && self.cursor_pos.x <= (button_upper_left_corner_x + self.button_size.x)
-            && self.cursor_pos.y >= button_upper_left_corner_y
-            && self.cursor_pos.y <= (button_upper_left_corner_y + self.button_size.y)
-        {
-            true
-        } else {
-            false
-        }
-    }
-
     pub fn set_message(&mut self, on_slide: Option<Box<dyn Message>>) {
         self.on_slide = on_slide;
     }
@@ -118,7 +102,6 @@ impl SliderWidget {
     }
 
     fn get_slider_index(value: i32, vector: &Vec<Position>) -> usize {
-        //isto se calhar tem de ser &, testa com ambos.
         if let Ok(result) = vector.binary_search_by_key(
             &value,
             |&Position {
@@ -153,7 +136,7 @@ impl Widget for SliderWidget {
                 }
             }
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
-                if self.is_mouse_inside() {
+                if self.is_cursor_inside(self.cursor_pos) {
                     self.is_pressed = true;
                 }
             }
@@ -347,10 +330,14 @@ impl Widget for SliderWidget {
     }
 
     fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
-        if (self.position.x + self.size.x) >= cursor_pos.x
-            && (self.position.y + self.size.y) >= cursor_pos.y
-            && self.position.x <= cursor_pos.x
-            && self.position.y <= cursor_pos.y
+        let button_upper_left_corner_x =
+            self.slider_positions[self.slider_index].x_coordinate - (self.button_size.x * 0.5);
+        let button_upper_left_corner_y =
+            self.position.y + (self.size.y * 0.5) - (self.button_size.y * 0.5);
+        if cursor_pos.x >= button_upper_left_corner_x
+            && cursor_pos.x <= (button_upper_left_corner_x + self.button_size.x)
+            && cursor_pos.y >= button_upper_left_corner_y
+            && cursor_pos.y <= (button_upper_left_corner_y + self.button_size.y)
         {
             true
         } else {

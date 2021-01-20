@@ -151,11 +151,7 @@ impl Widget for IconWidget {
     fn set_offset(&mut self, offset: Vector2D) {
         self.offset = offset;
     }
-    fn is_cursor_inside(&mut self, cursor_pos : Vector2D) -> bool {
-        if (self.position.x + self.size.x) >= cursor_pos.x && (self.position.y + self.size.y) >= cursor_pos.y && self.position.x <=cursor_pos.x && self.position.y <=cursor_pos.y  {
-            true
-        } else{
-            false
-        }  
+    fn is_cursor_inside(&mut self, _cursor_pos : Vector2D) -> bool {
+        false
     }
 }
