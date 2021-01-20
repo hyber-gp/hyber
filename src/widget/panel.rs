@@ -1,5 +1,5 @@
 use crate::event::Event;
-use crate::renderer::{DrawImageOptions, Message, RenderInstruction};
+use crate::renderer::{Message, RenderInstruction};
 use crate::util::{Color, Queue, Vector2D};
 use crate::widget::{Layout, Widget};
 
@@ -7,11 +7,12 @@ use std::cell::RefCell;
 use std::rc::Weak;
 
 #[derive(Clone)]
-pub struct IconWidget {
+pub struct PanelWidget {
     id: usize,
-    path: String,
-    options: DrawImageOptions,
+    text: String,
+    font_size: usize,
     background_color: Color,
+    foreground_color: Color,
     dirty: bool,
     children: Vec<Weak<RefCell<dyn Widget>>>,
     position: Vector2D,
@@ -21,18 +22,20 @@ pub struct IconWidget {
     offset: Vector2D,
 }
 
-impl IconWidget {
+impl PanelWidget {
     pub fn new(
-        path: String,
+        text: String,
         size: Vector2D,
-        options: DrawImageOptions,
+        font_size: usize,
         background_color: Color,
-    ) -> IconWidget {
-        IconWidget {
+        foreground_color: Color,
+    ) -> PanelWidget {
+        PanelWidget {
             id: 0,
-            path: path,
-            options: options,
+            text: text,
+            font_size: font_size,
             background_color: background_color,
+            foreground_color: foreground_color,
             dirty: true,
             children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
             position: Vector2D::new(0., 0.),
@@ -42,10 +45,15 @@ impl IconWidget {
             offset: Vector2D::new(0., 0.),
         }
     }
+
+    pub fn set_text(&mut self, text: String) {
+        self.text = text;
+        self.dirty = true;
+    }
 }
 
-impl Widget for IconWidget {
-    fn on_event(&mut self, _event: Event, _messages: &mut Queue<Box<dyn Message>>) {}
+impl Widget for PanelWidget {
+    fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {}
 
     fn set_id(&mut self, id: usize) {
         self.id = id;
@@ -57,21 +65,18 @@ impl Widget for IconWidget {
 
     fn recipe(&self) -> Vec<RenderInstruction> {
         vec![
-            // Icon rectangle.
+            // Label rectangle.
             RenderInstruction::DrawRect {
                 point: self.position,
                 color: self.background_color.clone(),
                 size: self.size,
-                clip_point: self.position,
-                clip_size: self.size,
             },
-            // Icon Image
-            RenderInstruction::DrawImage {
-                point: self.position, // todo: CHANGE after testing
-                path: self.path.clone(),
-                options: self.options.clone(),
-                clip_point: self.position,
-                clip_size: self.size,
+            // Label Text
+            RenderInstruction::DrawText {
+                point: Vector2D::new(self.position.x, self.position.y + self.size.y),
+                color: self.foreground_color,
+                font_size: self.font_size,
+                string: self.text.clone(),
             },
         ]
     }
@@ -99,7 +104,6 @@ impl Widget for IconWidget {
     fn size(&mut self) -> Vector2D {
         self.size
     }
-
     fn original_size(&mut self) -> Vector2D {
         self.original_size
     }
@@ -150,12 +154,5 @@ impl Widget for IconWidget {
 
     fn set_offset(&mut self, offset: Vector2D) {
         self.offset = offset;
-    }
-    fn is_cursor_inside(&mut self, cursor_pos : Vector2D) -> bool {
-        if (self.position.x + self.size.x) >= cursor_pos.x && (self.position.y + self.size.y) >= cursor_pos.y && self.position.x <=cursor_pos.x && self.position.y <=cursor_pos.y  {
-            true
-        } else{
-            false
-        }  
     }
 }

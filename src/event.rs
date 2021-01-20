@@ -115,6 +115,7 @@ pub enum Window {
         height: u32,
     },
 }
+
 #[derive(Debug, Copy, Clone)]
 ///Representation of an user interface event
 pub enum Event {

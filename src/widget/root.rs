@@ -36,7 +36,6 @@ impl RootWidget {
         }
     }
 }
-
 impl Widget for RootWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
         match event {
@@ -137,4 +136,8 @@ impl Widget for RootWidget {
     }
 
     fn set_offset(&mut self, _offset: Vector2D) {}
+
+    fn is_cursor_inside(&mut self, _cursor_pos: Vector2D) -> bool {
+        false
+    }
 }

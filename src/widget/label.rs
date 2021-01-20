@@ -53,7 +53,7 @@ impl LabelWidget {
 }
 
 impl Widget for LabelWidget {
-    fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {}
+    fn on_event(&mut self, _event: Event, _messages: &mut Queue<Box<dyn Message>>) {}
 
     fn set_id(&mut self, id: usize) {
         self.id = id;
@@ -70,6 +70,8 @@ impl Widget for LabelWidget {
                 point: self.position,
                 color: self.background_color.clone(),
                 size: self.size,
+                clip_point: self.position,
+                clip_size: self.size,
             },
             // Label Text
             RenderInstruction::DrawText {
@@ -77,6 +79,8 @@ impl Widget for LabelWidget {
                 color: self.foreground_color,
                 font_size: self.font_size,
                 string: self.text.clone(),
+                clip_point: self.position,
+                clip_size: self.size,
             },
         ]
     }
@@ -154,5 +158,13 @@ impl Widget for LabelWidget {
 
     fn set_offset(&mut self, offset: Vector2D) {
         self.offset = offset;
+    }
+
+    fn is_cursor_inside(&mut self, cursor_pos : Vector2D) -> bool {
+        if (self.position.x + self.size.x) >= cursor_pos.x && (self.position.y + self.size.y) >= cursor_pos.y && self.position.x <=cursor_pos.x && self.position.y <=cursor_pos.y  {
+            true
+        } else{
+            false
+        }  
     }
 }
