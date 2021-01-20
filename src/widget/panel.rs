@@ -53,7 +53,13 @@ impl PanelWidget {
 }
 
 impl Widget for PanelWidget {
-    fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {}
+    fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
+        for value in self.children.iter_mut() {
+            if let Some(child) = value.upgrade() {
+                child.borrow_mut().on_event(event, messages);
+            }
+        }
+    }
 
     fn set_id(&mut self, id: usize) {
         self.id = id;
