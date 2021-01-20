@@ -31,7 +31,7 @@ impl<T> Queue<T> {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Color {
     pub a: u8,
     pub r: u8,
@@ -59,7 +59,7 @@ impl Color {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy,Debug)]
 pub struct Vector2D {
     pub x: f64,
     pub y: f64,

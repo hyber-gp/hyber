@@ -5,11 +5,12 @@ use crate::util::Queue;
 use crate::util::Vector2D;
 use crate::widget::Widget;
 
+use std::time::{Instant};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 use std::rc::Weak;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum DrawImageOptions {
     OriginalSize,
     Resize { width: usize, height: usize },
@@ -17,7 +18,7 @@ pub enum DrawImageOptions {
 }
 
 /// Enumeration with the Render Instructions
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub enum RenderInstruction {
     /// Instruction to the Render that the buffer needs to be cleared
     /// Uses a Color struct using hexadecimal alpha and rgb for coloring
@@ -302,6 +303,85 @@ pub trait Renderer<D, E> {
     /// # Arguments
     /// * `instruction` - RenderInstruction to draw a primitive
     fn draw_collection(&mut self, collection: &RenderInstructionCollection, display: &mut D);
+
+
+    /// Benchmark Functions
+    fn benchmarked_rendererloop(
+        &mut self,
+        mut events: Queue<Event>,
+        mut messages: Queue<Box<dyn Message>>,
+        root_ptr: Weak<RefCell<dyn Widget>>,
+        display: &mut D,
+        display_size: Vector2D,
+        id_machine: &mut IDMachine,
+        render_instruction_collection_ptr: Weak<RefCell<RenderInstructionCollection>>,
+        absolute_widget_collection_ptr: Weak<RefCell<AbsoluteWidgetCollection>>,
+    ) {
+        loop {
+            let loop_start_time = Instant::now();
+            let mut layout_time = loop_start_time;
+            let mut draw_time = loop_start_time;
+            // 1º RECOLHER -> MAPEAR -> METER NA QUEUE
+            Self::detect_display_events(&mut events, display);
+            let event_map_time = Instant::now();
+            // 2º chamar on event na arvore de widgets
+            // estes eventos alterarão a collection.
+            if let Some(root) = root_ptr.upgrade() {
+                if let Some(render_instruction_collection) =
+                    render_instruction_collection_ptr.upgrade()
+                {
+                    for event in events.queue.drain(..) {
+                        root.borrow_mut().on_event(event, &mut messages);
+                    }
+
+                    root.borrow_mut().build(
+                        Vector2D::new(0., 0.),
+                        display_size,
+                        id_machine,
+                        &mut render_instruction_collection.borrow_mut(),
+                    );
+
+                    // Chamar build do absolute
+                    if let Some(absolute_widgets) = absolute_widget_collection_ptr.upgrade() {
+                        for (id, (value, position, size)) in
+                            absolute_widgets.borrow_mut().widgets.iter()
+                        {
+                            if let Some(widget) = value.upgrade() {
+                                if widget.borrow_mut().is_dirty() {
+                                    // Assign position of widget
+                                    widget.borrow_mut().set_position(*position);
+                                    // Assign size of widget
+                                    widget.borrow_mut().set_size(*size);
+
+                                    render_instruction_collection.borrow_mut().remove(*id);
+                                    render_instruction_collection
+                                        .borrow_mut()
+                                        .replace_or_insert(
+                                            *id,
+                                            widget.borrow_mut().recipe().clone(),
+                                        );
+                                    widget.borrow_mut().set_dirty(false);
+                                }
+                            }
+                        }
+                    }
+                    layout_time = Instant::now();
+                    // 3º desenhar
+                    self.draw_collection(&mut render_instruction_collection.borrow_mut(), display);
+                    draw_time = Instant::now();
+                    // 4º percorrer as mensagens e fazer update
+                    for message in messages.queue.drain(..) {
+                        message.update();
+                    }
+                }
+            }
+            let loop_end_time = Instant::now();
+            println!("\r{:?}||{:?}||{:?}||{:?}", event_map_time.duration_since(loop_start_time),
+                                                layout_time.duration_since(loop_start_time),
+                                                draw_time.duration_since(loop_start_time),
+                                                loop_end_time.duration_since(loop_start_time),);
+        }
+    }
 }
 
 /// Structure that represents the collection of Render Instructions to be
