@@ -6,22 +6,56 @@ use crate::widget::{Layout, Widget};
 use std::cell::RefCell;
 use std::rc::Weak;
 
+/// Icon is a widget that provides the ability to display an image,
+/// a fixed-sized picture.
 #[derive(Clone)]
 pub struct IconWidget {
+    /// The icon's identifier
     id: usize,
+    
+    /// The icon's picture absolute path
     path: String,
+    
+    /// The icon's draw settings
     options: DrawImageOptions,
+    
+    /// The icon's brackground color
     background_color: Color,
+    
+    /// The dirty flag (i.e., flag used to mark the widgets needed to be rebuilt)
     dirty: bool,
+    
+    /// The icon's children (i.e., his widgets tree)
     children: Vec<Weak<RefCell<dyn Widget>>>,
+    
+    /// The icon's position, on a two-dimensional space (x-coordinate and y-coordinate) 
+    /// relative to the top left corner
     position: Vector2D,
+    
+    /// The icon's current size (width and height)
     size: Vector2D,
+    
+    /// The icon's original size (width and height)
     original_size: Vector2D,
+    
+    /// The icon's layout
     layout: Layout,
+    
+    /// The icon's offset vector coordinates
     offset: Vector2D,
 }
 
 impl IconWidget {
+    /// Creates a new `IconWidget`
+    ///
+    /// # Returns
+    /// The icon created
+    ///
+    /// # Arguments
+    /// * `path` - the absolute path of the picture to be assigned to the icon
+    /// * `size` - the size (width and height) to be assigned to the icon
+    /// * `options` - the draw settings to be used when drawing the icon
+    /// * `background_color` - the color to be assigned to the icon's background
     pub fn new(
         path: String,
         size: Vector2D,

@@ -9,24 +9,66 @@ use std::rc::Weak;
 
 #[derive(Clone)]
 pub struct TextBoxWidget {
+    /// The textbox's identifier
     id: usize,
+    
+    /// The textbox's background color
     background_color: Color,
+    
+    /// The textbox's text color
     text_color: Color,
+    
+    /// The textbox's border thickness
     border_thickness: f64,
+    
+    /// The textbox's text
     text: String,
+    
+    /// The message to be handled when the text changes
     on_text_change: Option<Box<dyn Message>>,
-    is_focused: bool,     //State
-    cursor_pos: Vector2D, //State
+    
+    /// Whether the textbox is focused
+    is_focused: bool,
+    
+    /// The cursor's position
+    cursor_pos: Vector2D,
+
+    /// The dirty flag (i.e., flag used to mark the widgets needed to be rebuilt)
     dirty: bool,
+
+    /// The textbox's children (i.e., his widgets tree)
     children: Vec<Weak<RefCell<dyn Widget>>>,
+
+    /// The textbox's position, on a two-dimensional space (x-coordinate and y-coordinate) 
+    /// relative to the top left corner
     position: Vector2D,
+
+    /// The textbox's current size (width and height)
     size: Vector2D,
+
+    /// The textbox's original size (width and height)
     original_size: Vector2D,
+
+    /// The textbox's layout
     layout: Layout,
+
+    /// The textbox's offset vector coordinates
     offset: Vector2D,
 }
 
 impl TextBoxWidget {
+    /// Creates a new `TextBoxWidget`
+    ///
+    /// # Returns
+    /// The textbox created
+    ///
+    /// # Arguments
+    /// * `size` - the size (width and height) to be assigned to the textbox
+    /// * `background_color` - the color to be assigned to the textbox's background
+    /// * `text_color` - the color to be assigned to the textbox's text
+    /// * `border_thickness` - the thickness to be assigned to the textbox's border
+    /// * `text` - the text to be assigned to the textbox
+    /// * `on_text_change` - the message to be handled when the tetxbox is focused 
     pub fn new(
         size: Vector2D,
         background_color: Color,
@@ -54,6 +96,13 @@ impl TextBoxWidget {
         }
     }
 
+    /// Sets the message to be handled when the textbox is focused
+    ///
+    /// # Returns
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `on_text_change` - the new message to be handled when the textbox is focused
     pub fn set_message(&mut self, on_text_change: Option<Box<dyn Message>>) {
         self.on_text_change = on_text_change;
     }

@@ -8,28 +8,72 @@ use std::cell::RefCell;
 use std::rc::Weak;
 use std::time::Instant;
 
+/// Time required to press be considered long
 const ON_LONG_PRESS_TIME: u128 = 500;
 
+/// Button is a widget that reacts to touches
 #[derive(Clone)]
 pub struct ButtonViewWidget {
+    /// The button's identifier
     id: usize,
+
+    /// Whether the button is clickable
     is_clickable: bool,
+
+    /// The button's background color
     background_color: Color,
+
+    /// The message to be handled when a user press
     on_press: Option<Box<dyn Message>>,
+    
+    /// The message to be handled when a user long press
     on_long_press: Option<Box<dyn Message>>,
-    is_pressed: bool,     //State
-    click_time: Instant,  //State
-    cursor_pos: Vector2D, //State
+
+    /// Whether the button is pressed
+    is_pressed: bool,
+
+    /// The instant when the button was clicked
+    click_time: Instant,
+
+    /// The cursor's position
+    cursor_pos: Vector2D,
+
+    /// The dirty flag (i.e., flag used to mark the widgets needed to be rebuilt)
     dirty: bool,
+
+    /// The button's children (i.e., his widgets tree)
     children: Vec<Weak<RefCell<dyn Widget>>>,
+
+    /// The button's position, on a two-dimensional space (x-coordinate and y-coordinate) 
+    /// relative to the top left corner
     position: Vector2D,
+
+    /// The button's current size (width and height)
     size: Vector2D,
+
+    /// The button's original size (width and height)
     original_size: Vector2D,
+
+    /// The button's layout
     layout: Layout,
+
+    /// The button's offset vector coordinates
     offset: Vector2D,
 }
 
 impl ButtonViewWidget {
+    /// Creates a new `ButtonViewWidget`
+    ///
+    /// # Returns
+    /// The button created
+    ///
+    /// # Arguments
+    /// * `size` - the size (width and height) to be assigned to the button
+    /// * `is_clickable` - boolean indicating if button is clickable
+    /// * `background_color` - the color to be assigned to the button's background
+    /// * `on_press` - the message to be handled when the button is pressed
+    /// * `on_long_press` - the message to be handled when the button is pressed 
+    /// and held for at least the `ON_LONG_PRESS_TIME`
     pub fn new(
         size: Vector2D,
         is_clickable: bool,
@@ -56,6 +100,13 @@ impl ButtonViewWidget {
         }
     }
 
+    /// Sets button's clickable attribute
+    ///
+    /// # Returns
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `value` - boolean indicating if button is clickable
     pub fn set_is_clickable(&mut self, value: bool) {
         self.is_clickable = value;
     }

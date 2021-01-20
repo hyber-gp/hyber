@@ -7,26 +7,74 @@ use crate::widget::{Layout, Widget};
 use std::cell::RefCell;
 use std::rc::Weak;
 
+/// Checkbox is a stateful widget that when state changes calls
+/// the `on_change` callback. When this changes are made, the 
+/// checkbox is rebuilt and his visual appearance is updated.
 #[derive(Clone)]
 pub struct CheckBoxWidget {
+    /// The checkbox's identifier
     id: usize,
+
+    /// The checkbox's background color
     background_color: Color,
+
+    /// The checkbox's border color when checked
     selected_color: Color,
+
+    /// The message to be handled when a user change the 
+    /// checkbox's checked flag (i.e., when the `is_checked` 
+    /// flag changes its value)
     on_change: Option<Box<dyn Message>>,
+
+    /// The checkbox's border size when not checked
     border_size: f64,
+
+    /// The checkbox's border size when checked
     selected_relative_size: f64,
-    cursor_pos: Vector2D, //State
-    is_checked: bool,     //State
+    
+    /// The cursor's position
+    cursor_pos: Vector2D,
+    
+    /// Whether the checkbox is checked
+    is_checked: bool,
+    
+    /// The dirty flag (i.e., flag used to mark the widgets needed to be rebuilt)
     dirty: bool,
+    
+    /// The checkbox's children (i.e., his widgets tree)
     children: Vec<Weak<RefCell<dyn Widget>>>,
+    
+    /// The checkbox's position, on a two-dimensional space (x-coordinate and y-coordinate) 
+    /// relative to the top left corner
     position: Vector2D,
+    
+    /// The checkbox's current size (width and height)
     size: Vector2D,
+    
+    /// The checkbox's original size (width and height)
     original_size: Vector2D,
+    
+    /// The checkbox's layout
     layout: Layout,
+
+    /// The checkbox's offset vector coordinates
     offset: Vector2D,
 }
 
 impl CheckBoxWidget {
+    /// Creates a new `CheckBoxWidget`
+    ///
+    /// # Returns
+    /// The checkbox created
+    ///
+    /// # Arguments
+    /// * `size` - the size (width and height) to be assigned to the checkbox
+    /// * `background_color` - the color to be assigned to the checkbox's background
+    /// * `selected_color` - the color to be assigned to the checkbox border when checked
+    /// * `on_change` - the message to be handled when the checkbox's `is_checked` value change
+    /// * `is_checked` - boolean indicating if checkbox is checked
+    /// * `border_size` - the size to be assigned to the checkbox border when not checked
+    /// * `selected_relative_size` - the size to be assigned to the checkbox border when checked
     pub fn new(
         size: Vector2D,
         background_color: Color,
@@ -55,10 +103,24 @@ impl CheckBoxWidget {
         }
     }
 
+    /// Sets the message to be handled when the checkbox's `is_checked` value change
+    ///
+    /// # Returns
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `on_change` - the message to be handled when the checkbox's `is_checked` value change
     pub fn set_message(&mut self, on_change: Option<Box<dyn Message>>) {
         self.on_change = on_change;
     }
-
+    
+    /// Checks if the checkbox is checked
+    ///
+    /// # Returns
+    /// True, if the checkbox is checked, false otherwise
+    ///
+    /// # Arguments
+    /// No arguments
     pub fn get_is_checked(&self) -> bool {
         self.is_checked
     }

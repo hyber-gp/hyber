@@ -6,23 +6,62 @@ use crate::widget::{Layout, Widget};
 use std::cell::RefCell;
 use std::rc::Weak;
 
+/// Label is a widget that displays a short text string. Does not react to input events. 
+/// As a result, it cannot get the keyboard focus. A label can, however, display a keyboard
+/// alternative as a convenience for a nearby component that has a keyboard alternative 
+/// but can't display it.
 #[derive(Clone)]
 pub struct LabelWidget {
+    /// The label's identifier
     id: usize,
+    
+    /// The label's text
     text: String,
+    
+    /// The label's font size
     font_size: usize,
+    
+    /// The label's background color
     background_color: Color,
+    
+    /// The label's foreground color (i.e., text color)
     foreground_color: Color,
+    
+    /// The dirty flag (i.e., flag used to mark the widgets needed to be rebuilt)
     dirty: bool,
+    
+    /// The label's children (i.e., his widgets tree)
     children: Vec<Weak<RefCell<dyn Widget>>>,
+    
+    /// The label's position, on a two-dimensional space (x-coordinate and y-coordinate) 
+    /// relative to the top left corner
     position: Vector2D,
+    
+    /// The label's current size (width and height)
     size: Vector2D,
+    
+    /// The label's original size (width and height)
     original_size: Vector2D,
+    
+    /// The label's layout
     layout: Layout,
+    
+    /// The label's offset vector coordinates
     offset: Vector2D,
 }
 
 impl LabelWidget {
+    /// Creates a new `LabelWidget`
+    ///
+    /// # Returns
+    /// The label created
+    ///
+    /// # Arguments
+    /// * `text` - the text to be assigned to the label
+    /// * `size` - the size (width and height) to be assigned to the label
+    /// * `font_size` - the font size to be assigned to the label's text
+    /// * `background_color` - the color to be assigned to the icon's background
+    /// * `foreground_color` - the color to be assigned to the icon's text
     pub fn new(
         text: String,
         size: Vector2D,
@@ -46,6 +85,13 @@ impl LabelWidget {
         }
     }
 
+    /// Sets label's text
+    ///
+    /// # Returns
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `text` - the text to be assigned to the label
     pub fn set_text(&mut self, text: String) {
         self.text = text;
         self.dirty = true;

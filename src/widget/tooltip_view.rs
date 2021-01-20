@@ -10,22 +10,57 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::rc::Weak;
 
+/// Tooltip is a widget that is used to display a "Tip" for another widget.
 #[derive(Clone)]
 pub struct TooltipViewWidget {
+    /// The tooltip's identifier
     id: usize,
+    
+    /// The tooltip's current size (width and height)
     size: Vector2D,
+    
+    /// The tooltip's position, on a two-dimensional space (x-coordinate and y-coordinate) 
+    /// relative to the top left corner
     position: Vector2D,
+
+    /// The tooltip's original size (width and height)
     original_size: Vector2D,
+
+    /// The tooltip's layout
     layout: Layout,
-    cursor_pos: Vector2D, // State
+    
+    /// The cursor's position
+    cursor_pos: Vector2D,
+    
+    /// The dirty flag (i.e., flag used to mark the widgets needed to be rebuilt)
     dirty: bool,
+    
+    /// The tooltip's children (i.e., his widgets tree)
     children: Vec<Weak<RefCell<dyn Widget>>>,
+    
+    /// The collection of render instructions with the draw primitives of the
+    /// `tooltip_widget`
     render_instruction_collection_ptr: Weak<RefCell<RenderInstructionCollection>>,
+    
+    /// The tooltip's children with absolute positions (i.e., his widgets tree)
     absolute_widget_collection_ptr: Weak<RefCell<AbsoluteWidgetCollection>>,
+    
+    /// The widget to be presented whether the tooltip is enabled
     tooltip_widget: Weak<RefCell<dyn Widget>>,
 }
 
 impl TooltipViewWidget {
+    /// Creates a new `TooltipViewWidget`
+    ///
+    /// # Returns
+    /// The tooltip created
+    ///
+    /// # Arguments
+    /// * `size` - the size (width and height) to be assigned to the tooltip
+    /// * `render_instruction_collection_ptr` - the collection of render instructions with 
+    /// the draw primitives of the `tooltip_widget`
+    /// * `absolute_widget_collection_ptr` - the tooltip's children with absolute positions
+    /// * `tooltip_widget` - the widget to be presented whether the tooltip is enabled
     pub fn new(
         size: Vector2D,
         render_instruction_collection_ptr: Weak<RefCell<RenderInstructionCollection>>,
@@ -46,7 +81,6 @@ impl TooltipViewWidget {
             tooltip_widget: tooltip_widget,
         }
     }
-
 }
 
 impl Widget for TooltipViewWidget {

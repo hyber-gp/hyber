@@ -1,25 +1,43 @@
 use crate::util::Vector2D;
 
-/// Structure that contains optional settings for a display window.
-/// It should be used when creating a new Display.
-/// It also provides default settings for a new Display.
+/// Optional display's settings that should be used when creating a new Display
+///
+/// It also provides default settings for a new Display
 pub struct DisplayDescritor {
-    /// Indicates if display has a border (default: true)
+    /// Whether the display has a border
+    ///
+    /// [default: true]
     pub border: bool,
-    /// Indicates if display is titled (default: true)
+
+    /// Whether the display is titled
+    ///
+    /// [default: true]
     pub titled: bool,
-    /// Indicates if display is resizable (default: false)
+    
+    /// Whether the display is resizable
+    ///
+    /// [default: false]
     pub resizable: bool,
-    /// Indicates if display always appears on top of all displays which are not topmost (default: false)
+    
+    /// Whether the display always appears on top of all displays which are not topmost
+    ///
+    /// [default: false]
     pub topmost: bool,
-    /// Indicates if display is minimizable (default: true)
+    
+    /// Whether the display is minimizable
+    ///
+    /// [default: true]
     pub minimizable: bool,
 }
 
 impl DisplayDescritor {
-    /// Returns a DisplayDescriptor with default values, allowing to override each attribute
+    /// Creates a new default `DisplayDescritor`
+    ///
+    /// # Returns
+    /// A new DisplayDescriptor with default values
     ///
     /// # Arguments
+    /// No arguments
     ///
     /// # Examples
     ///
@@ -41,17 +59,23 @@ impl DisplayDescritor {
     }
 }
 
-/// Implements the necessary methods to a complete Display/Window system
+/// Display is the window that are presented to the user. The widgets are 
+// rendered within this display, what makes possible to render the user interface
 pub trait Display {
+    /// Data buffer to be displayed on the window
     type Buffer;
 
-    /// Creates and opens up a new display
+    /// Creates and present a new `Display`
+    ///
+    /// # Returns
+    /// The display created and already presented
     ///
     /// # Arguments
-    /// * `title` - Title of the display
-    /// * `width` - Width of the display
-    /// * `height` - Height of the display
-    /// * `display_descriptor` - Holds a reference to a DisplayDescriptor, which contains optional stylings for the display
+    /// * `title` - the title to be assigned to the display
+    /// * `width` - the width to be assigned to the display
+    /// * `height` - the height to be assigned to the display
+    /// * `display_descriptor` - the reference to a `DisplayDescriptor` which contains
+    /// optional stylings to be assigned to the display
     ///
     /// # Examples
     ///
@@ -77,9 +101,11 @@ pub trait Display {
 
     /// Sets a new title for the display
     ///
-    /// # Arguments
+    /// # Returns
+    /// No returns
     ///
-    /// * `title` - Title of the display
+    /// # Arguments
+    /// * `title` - the title to be assigned to the display
     ///
     /// # Examples
     ///
@@ -100,7 +126,11 @@ pub trait Display {
 
     /// Updates the display
     ///
+    /// # Returns
+    /// No returns
+    ///
     /// # Arguments
+    /// No arguments
     ///
     /// # Examples
     ///
@@ -124,6 +154,9 @@ pub trait Display {
     fn update(&mut self);
 
     /// Updates the display along with its buffer
+    ///
+    /// # Returns
+    /// No returns
     ///
     /// # Arguments
     /// * `buffer` - buffer associated with the display
@@ -156,9 +189,13 @@ pub trait Display {
     /// ```
     fn update_with_buffer(&mut self, buffer: &Self::Buffer, width: usize, height: usize);
 
-    /// Check if the display is open. The user may want to take some action depending on this state.
+    /// Checks if the display is open
+    ///
+    /// # Returns
+    /// True, if the display is opened, false otherwise
     ///
     /// # Arguments
+    /// No arguments
     ///
     /// # Examples
     ///
@@ -177,11 +214,14 @@ pub trait Display {
     /// ```
     fn is_open(&self) -> bool;
 
-    /// Sets the position of the window, relative to the topleft corner of the display.
+    /// Sets display's position, relative to the top left corner
+    ///
+    /// # Returns
+    /// No returns
     ///
     /// # Arguments
-    /// * `x` - x-coordinate for the topleft corner
-    /// * `y` - y-coordinate for the topleft corner
+    /// * `x` - x-coordinate to be assigned to the display's top left corner
+    /// * `y` - y-coordinate to be assigned to the display's top left corner
     ///
     /// # Examples
     ///
@@ -200,7 +240,10 @@ pub trait Display {
     /// ```
     fn set_position(&mut self, x: usize, y: usize);
 
-    /// Toggles a border in the display
+    /// Sets the display's border property
+    ///
+    /// # Returns
+    /// No returns
     ///
     /// # Arguments
     /// * `border` - boolean indicating if display has a border
@@ -224,7 +267,10 @@ pub trait Display {
     /// ```
     fn border(&mut self, border: bool);
 
-    /// Makes the display resizable
+    /// Sets the display's resizable property
+    ///
+    /// # Returns
+    /// No returns
     ///
     /// # Arguments
     /// * `resizable` - boolean indicating if display is resizable
@@ -248,6 +294,9 @@ pub trait Display {
 
     /// Makes the display always appear on top of those that are not topmost
     ///
+    /// # Returns
+    /// No returns
+    ///
     /// # Arguments
     /// * `topmost` - boolean indicating if display is topmost
     ///
@@ -268,7 +317,10 @@ pub trait Display {
     /// ```
     fn topmost(&mut self, topmost: bool);
 
-    /// Makes the display minimizable
+    /// Sets the display's minimizable property
+    ///
+    /// # Returns
+    /// No returns
     ///
     /// # Arguments
     /// * `minimizable` - boolean indicating if display is minimizable
@@ -292,11 +344,14 @@ pub trait Display {
     /// ```
     fn minimizable(&mut self, minimizable: bool);
 
-    /// Sets background color that is updated in the buffer.
+    /// Sets the display's background color
+    ///
+    /// # Returns
+    /// No returns
     ///
     /// # Arguments
     /// * `red` - value for red color
-    /// * `green` - value value for green color
+    /// * `green` - value for green color
     /// * `blue` - value for blue color
     ///
     /// # Examples
@@ -318,9 +373,13 @@ pub trait Display {
     /// ```
     fn set_background_color(&mut self, red: usize, green: usize, blue: usize);
 
-    /// Returns the current size of the display
+    /// Gets display's current size
+    ///
+    /// # Returns
+    /// The current size of the display
     ///
     /// # Arguments
+    /// No arguments
     ///
     /// # Examples
     ///
@@ -341,7 +400,11 @@ pub trait Display {
 
     /// Checks if the display is the current active one
     ///
+    /// # Returns
+    /// True, if the display is the current active one, false otherwise
+    ///
     /// # Arguments
+    /// No arguments
     ///
     /// # Examples
     ///

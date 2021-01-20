@@ -1,23 +1,38 @@
 use crate::key_code::KeyCode;
+
+/// The current state of the keyboard modifiers
 #[derive(Debug, Copy, Clone)]
-///The current state of the keyboard modifiers
 pub struct ModifiersState {
-    /// Whether a shift key is pressed
+    /// Whether a shift key is pressed 
+    ///
+    /// [default: false]
     pub shift: bool,
 
     /// Whether a control key is pressed
+    ///
+    /// [default: false]
     pub control: bool,
 
     /// Whether an alt key is pressed
+    ///
+    /// [default: false]
     pub alt: bool,
 
     /// Whether a logo key is pressed (e.g. windows key, command key...)
+    ///
+    /// [default: false]
     pub logo: bool,
 }
 
 impl ModifiersState {
-    /// Returns true if the current [`ModifiersState`] has at least the same
-    /// modifiers enabled as the given value, and false otherwise.
+    /// Compares two [`ModifiersState`] to see if they match
+    ///
+    /// # Returns
+    /// True, if the current [`ModifiersState`] has at least the same
+    /// modifiers enabled as the given value, and false otherwise
+    ///
+    /// # Arguments
+    /// * `modifiers` - the [`ModifiersState`] to be compared
     pub fn matches(&self, modifiers: ModifiersState) -> bool {
         let shift = !modifiers.shift || self.shift;
         let control = !modifiers.control || self.control;
@@ -27,58 +42,65 @@ impl ModifiersState {
         shift && control && alt && logo
     }
 }
+
+/// A keyboard event
 #[derive(Debug, Copy, Clone)]
-///A keyboard event
 pub enum Keyboard {
-    ///A keyboard key was pressed
+    /// A keyboard key was pressed
     KeyPressed {
-        ///The key identifier
+        /// The key identifier
         key_code: KeyCode,
 
-        ///The state of the modifiers keys
+        /// The state of the modifiers keys
         modifiers: ModifiersState,
     },
-    ///A keyboard key was released
+
+    /// A keyboard key was released
     KeyReleased {
-        ///The key identifier
+        /// The key identifier
         key_code: KeyCode,
-        ///The state of the modifiers keys
+
+        /// The state of the modifiers keys
         modifiers: ModifiersState,
     },
-    ///The keyboard modifiers have changed
+
+    /// The keyboard modifiers have changed
     ModifiersChanged(ModifiersState),
 }
+
+/// A mouse event
 #[derive(Debug, Copy, Clone)]
-///A mouse event
 pub enum Mouse {
-    ///A mouse button was pressed
+    /// A mouse button was pressed
     ButtonPressed(MouseButton),
-    ///A mouse button was released
+
+    /// A mouse button was released
     ButtonReleased(MouseButton),
 
-    ///The mouse cursor entered the window
+    /// The mouse cursor entered the window
     CursorEntered,
 
-    ///The mouse cursor left the window
+    /// The mouse cursor left the window
     CursorLeft,
 
-    ///The mouse cursor moved
+    /// The mouse cursor moved
     CursorMoved {
-        ///The X coordinate of the mouse position
+        /// The X coordinate of the mouse position
         x: usize,
 
-        ///The Y coordinate of the mouse position
+        /// The Y coordinate of the mouse position
         y: usize,
     },
 
-    ///The mouse wheel was scrolled
+    /// The mouse wheel was scrolled
     WheelScrolled {
-        ///The scroll movement
+        /// The scroll movement
         delta: ScrollDelta,
     },
 }
+
+/// A mouse button
 #[derive(Debug, Copy, Clone)]
-///The button of a mouse
 pub enum MouseButton {
     /// The left mouse button.
     Left,
@@ -92,6 +114,10 @@ pub enum MouseButton {
     /// Some other button.
     Other(u8),
 }
+
+/// A scroll event
+///
+/// The number of units moved when the user scrolls
 #[derive(Debug, Copy, Clone)]
 pub enum ScrollDelta {
     /// A pixel-based scroll movement
@@ -103,21 +129,22 @@ pub enum ScrollDelta {
         y: usize,
     },
 }
+
+/// A window event
 #[derive(Debug, Copy, Clone)]
-///A window event
 pub enum Window {
-    ///The window was rezised
+    /// The window was rezised
     Resized {
-        ///The new width of the window
+        /// The new width of the window
         width: u32,
 
-        ///The new height of the window
+        /// The new height of the window
         height: u32,
     },
 }
 
+/// An user interface event
 #[derive(Debug, Copy, Clone)]
-///Representation of an user interface event
 pub enum Event {
     /// A keyboard event (eg. KeyPressed, KeyRelease...)
     Keyboard(Keyboard),
