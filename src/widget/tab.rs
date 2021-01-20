@@ -8,27 +8,71 @@ use std::cell::RefCell;
 use std::rc::Weak;
 use std::time::Instant;
 
+/// Time required to press be considered long
 const ON_LONG_PRESS_TIME: u128 = 300;
 
+/// Tab is a component that lets the user switch between a group
+/// of components by clicking on a tab with a given title.
 #[derive(Clone)]
 pub struct TabWidget {
+    /// The tab's identifier
     id: usize,
+    
+    /// The tab's background color
     background_color: Color,
+    
+    /// The dirty flag (i.e., flag used to mark the widgets needed to be rebuilt)
     dirty: bool,
+    
+    /// The tab's children (i.e., his widgets tree)
     children: Vec<Weak<RefCell<dyn Widget>>>,
+    
+    /// The tab's position, on a two-dimensional space (x-coordinate and y-coordinate) 
+    /// relative to the top left corner
     position: Vector2D,
+    
+    /// The tab's current size (width and height)
     size: Vector2D,
+    
+    /// The tab's original size (width and height)
     original_size: Vector2D,
+    
+    /// The tab's layout
     layout: Layout,
+
+    /// The tab's offset vector coordinates
     offset: Vector2D,
+    
+    /// The message to be handled when a user press 
     on_press: Option<Box<dyn Message>>,
+    
+    /// The message to be handled when a user long press (i.e., a user drag some tab)
     tab_moved: Option<Box<dyn Message>>,
+    
+    /// Wheter the tab is pressed
     is_pressed: bool,
+    
+    /// The instant when the tab was clicked
     click_time: Instant,
+    
+    /// The current cursor's position
     cursor_pos: Vector2D,
+    
+    /// The cursor's position at the end of the last long press (i.e., drag)
     moved_cursor_pos: Vector2D,
 }
 impl TabWidget {
+    /// Creates a new `TabWidget`
+    ///
+    /// # Returns
+    /// The tab created
+    ///
+    /// # Arguments
+    /// * `size` - the size (width and height) to be assigned to the tab
+    /// * `background_color` - the color to be assigned to the tab's background
+    /// * `on_press` - the message to be handled when the tab is pressed
+    /// * `tab_moved` - the message to be handled when the tab is pressed 
+    /// and held for at least the `ON_LONG_PRESS_TIME`
     pub fn new(
         size: Vector2D,
         background_color: Color,
@@ -53,6 +97,8 @@ impl TabWidget {
             moved_cursor_pos: Vector2D::new(-1., -1.),
         }
     }
+
+    /// Not documented, check Drive.
     fn is_mouse_inside(&mut self) -> bool {
         if (self.position.x + self.size.x) >= self.cursor_pos.x
             && (self.position.y + self.size.y) >= self.cursor_pos.y
@@ -65,10 +111,26 @@ impl TabWidget {
         }
     }
 
+    /// Sets the message to be handled when the tab is pressed 
+    /// and held for at least the `ON_LONG_PRESS_TIME`
+    ///
+    /// # Returns
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `new_message` - the new message to be handled when the tab is pressed 
+    /// and held for at least the `ON_LONG_PRESS_TIME`
     pub fn set_new_message_move(&mut self, new_message: Option<Box<dyn Message>>) {
         self.tab_moved = new_message;
     }
 
+    /// Gets the cursor's position at the end of the last long press (i.e., drag)
+    ///
+    /// # Returns
+    /// The cursor's position at the end of the last long press (i.e., drag)
+    ///
+    /// # Arguments
+    /// No arguments
     pub fn get_moved_cursor_pos(&mut self) -> Vector2D {
         self.moved_cursor_pos
     }

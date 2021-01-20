@@ -8,20 +8,49 @@ use crate::widget::{Layout, Widget};
 use std::cell::RefCell;
 use std::rc::Weak;
 
+/// 
 #[derive(Clone)]
 pub struct RootWidget {
+    /// The list's identifier
     id: usize,
+    
+    /// The list's identifier
     size: Vector2D,
+    
+    /// The list's identifier
     original_size: Vector2D,
+    
+    /// The list's identifier
     background_color: Color,
+    
+    /// The list's identifier
     message_incremented: Box<dyn Message>,
+    
+    /// The list's identifier
     message_decremented: Box<dyn Message>,
+    
+    /// The list's identifier
     layout: Layout,
+    
+    /// The list's identifier
     dirty: bool,
+    
+    /// The list's identifier
     children: Vec<Weak<RefCell<dyn Widget>>>,
 }
 
 impl RootWidget {
+    /// Creates a new `RootWidget`
+    ///
+    /// # Returns
+    /// The root created
+    ///
+    /// # Arguments
+    /// * `size` - the size (width and height) to be assigned to the root
+    /// * `background_color` - the color to be assigned to the root's background
+    /// * `layout` - the layout type to be assigned to the root
+    /// * `message_incremented` - Not documented, check Drive.
+    /// * `message_decremented` - Not documented, check Drive.
     pub fn new(
         size: Vector2D,
         background_color: Color,
@@ -42,6 +71,7 @@ impl RootWidget {
         }
     }
 }
+
 impl Widget for RootWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
         match event {

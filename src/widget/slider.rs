@@ -7,36 +7,95 @@ use crate::widget::{Layout, Widget};
 use std::cell::RefCell;
 use std::rc::Weak;
 
+/// Current slider position
 #[derive(Clone)]
 pub struct Position {
+    /// The current value of the slider
     pub slider_value: i32,
+    /// The current x-coordinate position of the slider
     pub x_coordinate: f64,
 }
 
+/// Slider is a component that lets the user graphically select a value 
+/// by sliding a button within a bounded interval. The button 
+/// is always positioned at the points that match integer values
+/// within the specified interval.
 #[derive(Clone)]
 pub struct SliderWidget {
+    /// The slider's identifier
     id: usize,
+    
+    /// The slider background color
     background_color: Color,
+    
+    /// The slider button color
     button_color: Color,
+    
+    /// The slider button size
     button_size: Vector2D,
+    
+    /// The slider's range (minimum and maximum)
     range: (i32, i32),
+    
+    /// The slider's step
     step: i32,
+    
+    /// The current value of slider step
     slider_value: i32,
+    
+    /// The message to be handled when a user slide the slider button
     on_slide: Option<Box<dyn Message>>,
+    
+    /// The possible positions for the slider button
     slider_positions: Vec<Position>,
-    is_pressed: bool,     //State
-    cursor_pos: Vector2D, //State
-    slider_index: usize,  //State
+    
+    /// Whether the slider is pressed
+    is_pressed: bool,
+    
+    /// The cursor's position
+    cursor_pos: Vector2D,
+    
+    /// The current slider's index on the `slider_positions`
+    slider_index: usize,
+    
+    /// The dirty flag (i.e., flag used to mark the widgets needed to be rebuilt)
     dirty: bool,
+    
+    /// The slider's children (i.e., his widgets tree)
     children: Vec<Weak<RefCell<dyn Widget>>>,
+    
+    /// The slider's position, on a two-dimensional space (x-coordinate and y-coordinate) 
+    /// relative to the top left corner
     position: Vector2D,
+    
+    /// The slider's current size (width and height)
     size: Vector2D,
+    
+    /// The slider's original size (width and height)
     original_size: Vector2D,
+    
+    /// The slider's layout
     layout: Layout,
+    
+    /// The slider's offset vector coordinates
     offset: Vector2D,
 }
 
 impl SliderWidget {
+    /// Creates a new `SliderWidget`
+    ///
+    /// # Returns
+    /// The slider created
+    ///
+    /// # Arguments
+    /// * `size` - the size (width and height) to be assigned to the slider
+    /// * `background_color` - the color to be assigned to the slider's background
+    /// * `button_color` - the color to be assigned to the slider button
+    /// * `button_size` - the size to be assigned to the slider button
+    /// * `range` - the range to be assigned to the slider
+    /// * `step` - the step to be assigned to the slider
+    /// * `slider_value` - the initial value to be assigned to the slider
+    /// * `on_slide` - the message to be handled when the user slides the slider button 
     pub fn new(
         size: Vector2D,
         background_color: Color,
@@ -72,6 +131,7 @@ impl SliderWidget {
         }
     }
 
+    /// Not documented, check Drive.
     fn is_mouse_inside(&mut self) -> bool {
         let button_upper_left_corner_x =
             self.slider_positions[self.slider_index].x_coordinate - (self.button_size.x * 0.5);
@@ -88,14 +148,39 @@ impl SliderWidget {
         }
     }
 
+    /// Sets the message to be handled when the user slides the slider button
+    ///
+    /// # Returns
+    /// No returns
+    ///
+    /// # Arguments
+    /// * `on_slide` - the message to be handled when the user slides the slider button
     pub fn set_message(&mut self, on_slide: Option<Box<dyn Message>>) {
         self.on_slide = on_slide;
     }
 
+    /// Gets the current slider value
+    ///
+    /// # Returns
+    /// The current slider value
+    ///
+    /// # Arguments
+    /// No arguments
     pub fn get_slider_value(&self) -> i32 {
         self.slider_value
     }
 
+    /// Gets all the possible slider positions for a given configuration
+    ///
+    /// # Returns
+    /// A vector with all the possible slider positions for the given configuration
+    ///
+    /// # Arguments
+    /// * `start` - the minimum range value to be considered
+    /// * `end` - the maximum range value to be considered
+    /// * `step` - the step to be considered
+    /// * `position` - the current slider's position
+    /// * `size` - the current slider's size
     fn get_slider_positions(
         start: i32,
         end: i32,
@@ -117,6 +202,14 @@ impl SliderWidget {
         slider_positions
     }
 
+    /// Gets the slider's index based on a value and a vector with all his possible positions
+    ///
+    /// # Returns
+    /// The slider's index within the `vector`
+    ///
+    /// # Arguments
+    /// * `value` - the value to be considered
+    /// * `vector` - a vector with all slider's possible positions
     fn get_slider_index(value: i32, vector: &Vec<Position>) -> usize {
         //isto se calhar tem de ser &, testa com ambos.
         if let Ok(result) = vector.binary_search_by_key(

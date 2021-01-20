@@ -6,17 +6,41 @@ use crate::widget::{Axis, Layout, Widget};
 use std::cell::RefCell;
 use std::rc::Weak;
 
+/// A Grid View is a view with an array of widgets that are 
+/// placed in a two dimensional grid of cells (rows and columns).
+/// Each component takes all the available space within its cell,
+/// and each cell is exactly the same size.
 #[derive(Clone)]
 pub struct GridViewWidget {
+    /// The grid's identifier
     id: usize,
+    
+    /// The grid's current size (width and height)
     size: Vector2D,
+    
+    /// The grid's original size (width and height)
     original_size: Vector2D,
+    
+    /// The grid's layout
     layout: Layout,
+    
+    /// The dirty flag (i.e., flag used to mark the widgets needed to be rebuilt)
     dirty: bool,
+    
+    /// The grid's children (i.e., his widgets tree)
     children: Vec<Weak<RefCell<dyn Widget>>>,
 }
 
 impl GridViewWidget {
+    /// Creates a new `GridViewWidget`
+    ///
+    /// # Returns
+    /// The grid view created
+    ///
+    /// # Arguments
+    /// * `size` - the size (width and height) to be assigned to the grid
+    /// * `axis` - the axis direction to be assigned to the grid layout
+    /// * `axis_length` - the axis length to be assigned to the grid layout
     pub fn new(size: Vector2D, axis: Axis, axis_length: usize) -> GridViewWidget {
         GridViewWidget {
             id: 0,

@@ -6,17 +6,37 @@ use crate::widget::{Axis, Layout, Widget};
 use std::cell::RefCell;
 use std::rc::Weak;
 
+/// List is a widget that displays multiple widgets in one column.
 #[derive(Clone)]
 pub struct ListViewWidget {
+    /// The list's identifier
     id: usize,
+    
+    /// The list's current size (width and height)
     size: Vector2D,
+    
+    /// The list's original size (width and height)
     original_size: Vector2D,
+    
+    /// The list's layout
     layout: Layout,
+    
+    /// The dirty flag (i.e., flag used to mark the widgets needed to be rebuilt)
     dirty: bool,
+    
+    /// The list's children (i.e., his widgets tree)
     children: Vec<Weak<RefCell<dyn Widget>>>,
 }
 
 impl ListViewWidget {
+    /// Creates a new `ListViewWidget`
+    ///
+    /// # Returns
+    /// The list view created
+    ///
+    /// # Arguments
+    /// * `size` - the size (width and height) to be assigned to the list view
+    /// * `axis` - the axis direction to be assigned to the list view
     pub fn new(size: Vector2D, axis: Axis) -> ListViewWidget {
         ListViewWidget {
             id: 0,
