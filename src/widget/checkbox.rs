@@ -21,6 +21,9 @@ pub struct CheckBoxWidget {
     /// The checkbox's border color when checked
     selected_color: Color,
 
+    /// The checkbox's border color when not checked
+    border_color: Color,
+
     /// The message to be handled when a user change the 
     /// checkbox's checked flag (i.e., when the `is_checked` 
     /// flag changes its value)
@@ -29,7 +32,7 @@ pub struct CheckBoxWidget {
     /// The checkbox's border size when not checked
     border_size: f64,
 
-    /// The checkbox's border size when checked
+    /// The checkbox's relative border size when checked
     selected_relative_size: f64,
     
     /// The cursor's position
@@ -70,15 +73,17 @@ impl CheckBoxWidget {
     /// # Arguments
     /// * `size` - the size (width and height) to be assigned to the checkbox
     /// * `background_color` - the color to be assigned to the checkbox's background
+    /// * `border_color` - the color to be assigned to the checkbox border when not checked
     /// * `selected_color` - the color to be assigned to the checkbox border when checked
     /// * `on_change` - the message to be handled when the checkbox's `is_checked` value change
     /// * `is_checked` - boolean indicating if checkbox is checked
     /// * `border_size` - the size to be assigned to the checkbox border when not checked
-    /// * `selected_relative_size` - the size to be assigned to the checkbox border when checked
+    /// * `selected_relative_size` - the relative size to be assigned to the checkbox border when checked (eg. 0.25)
     pub fn new(
         size: Vector2D,
         background_color: Color,
         selected_color: Color,
+        border_color: Color,
         on_change: Option<Box<dyn Message>>,
         is_checked: bool,
         border_size: f64,
@@ -88,6 +93,7 @@ impl CheckBoxWidget {
             id: 0,
             background_color: background_color,
             selected_color: selected_color,
+            border_color: border_color,
             on_change: on_change,
             is_checked: is_checked,
             border_size: border_size,
@@ -130,6 +136,7 @@ impl Widget for CheckBoxWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
         match event {
             event::Event::Mouse(event::Mouse::CursorMoved { x: x_pos, y: y_pos }) => {
+                //update cursor_pos on mouse move
                 self.cursor_pos = Vector2D::new(x_pos as f64, y_pos as f64);
                 for value in self.children.iter_mut() {
                     if let Some(child) = value.upgrade() {
@@ -138,12 +145,14 @@ impl Widget for CheckBoxWidget {
                 }
             }
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
+                //check if cursor is inside checkbox area
                 if self.is_cursor_inside(self.cursor_pos) {
                     if let Some(mut message) = self.on_change.clone() {
                         message.set_event(event);
                         messages.enqueue(message);
                     }
                     self.is_checked = !self.is_checked;
+                    //set widget as dirty when we switch is_checked state to update UI
                     self.set_dirty(true);
                 }
             }
@@ -193,7 +202,7 @@ impl Widget for CheckBoxWidget {
             vec![
                 RenderInstruction::DrawRect {
                     point: self.position,
-                    color: Color::from_hex(0xFF000000),
+                    color: self.border_color,
                     size: self.size,
                     clip_point: self.position,
                     clip_size: self.size,

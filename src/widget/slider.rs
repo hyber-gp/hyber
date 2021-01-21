@@ -153,10 +153,10 @@ impl SliderWidget {
         self.slider_value
     }
 
-    /// Gets all the possible slider positions for a given configuration
+    /// Gets all the possible slider positions for a given configuration, for internal use only
     ///
     /// # Returns
-    /// A vector with all the possible slider positions for the given configuration
+    /// A vector of type Position with all the possible slider positions for the given configuration
     ///
     /// # Arguments
     /// * `start` - the minimum range value to be considered
@@ -185,7 +185,7 @@ impl SliderWidget {
         slider_positions
     }
 
-    /// Gets the slider's index based on a value and a vector with all his possible positions
+    /// Gets the slider's index based on a value and a vector with all his possible positions, for internal use only
     ///
     /// # Returns
     /// The slider's index within the `vector`
@@ -211,13 +211,17 @@ impl Widget for SliderWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
         match event {
             event::Event::Mouse(event::Mouse::CursorMoved { x: x_pos, y: y_pos }) => {
+                //update cursor_pos on mouse move
                 self.cursor_pos = Vector2D::new(x_pos as f64, y_pos as f64);
+                //when the slider button is being pressed and we move the cursor
+                //we want to limit the cursor x position to the limits of the slider size on x-axis
                 if self.is_pressed {
                     if self.cursor_pos.x > self.position.x + self.size.x {
                         self.cursor_pos.x = self.position.x + self.size.x
                     } else if self.cursor_pos.x < self.position.x {
                         self.cursor_pos.x = self.position.x;
                     }
+                    //update the UI when we make a move on slider
                     self.set_dirty(true);
                 } else {
                     for value in self.children.iter_mut() {
@@ -228,20 +232,24 @@ impl Widget for SliderWidget {
                 }
             }
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
+                //if cursor is inside slider button switch the state of is_pressed
                 if self.is_cursor_inside(self.cursor_pos) {
                     self.is_pressed = true;
                 }
             }
             event::Event::Mouse(event::Mouse::ButtonReleased(event::MouseButton::Left)) => {
                 if self.is_pressed {
+                    //compute the value of half step size
                     let half_step_size = (self.slider_positions[1].x_coordinate
                         - self.slider_positions[0].x_coordinate)
                         * 0.5;
+                    //if cursor_pos.x is being move to right side
                     if self.cursor_pos.x
                         > self.slider_positions[self.slider_index].x_coordinate + half_step_size
                     {
                         if self.slider_index != self.slider_positions.len() - 1 {
                             self.slider_index = self.slider_index + 1;
+                            //find the new slider_index
                             while self.slider_positions[self.slider_index].x_coordinate
                                 < self.cursor_pos.x
                             {
@@ -272,6 +280,7 @@ impl Widget for SliderWidget {
                             }
                         }
                     }
+                    //update UI
                     self.set_dirty(true);
                     self.is_pressed = false;
                 }
@@ -403,6 +412,7 @@ impl Widget for SliderWidget {
     fn set_size(&mut self, size: Vector2D) {
         self.dirty = true;
         self.size = size;
+        //when the size changes we need to recompute the slider_positions
         self.slider_positions = SliderWidget::get_slider_positions(
             self.range.0,
             self.range.1,
