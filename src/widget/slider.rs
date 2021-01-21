@@ -421,6 +421,14 @@ impl Widget for SliderWidget {
         self.offset = offset;
     }
 
+    fn set_clip_point(&mut self, _clip_point: Option<Vector2D>) {
+        unimplemented!();
+    }
+
+    fn set_clip_size(&mut self, _clip_size: Option<Vector2D>) {
+        unimplemented!();
+    }
+    
     fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
         let button_upper_left_corner_x =
             self.slider_positions[self.slider_index].x_coordinate - (self.button_size.x * 0.5);

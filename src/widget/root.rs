@@ -1,6 +1,4 @@
-use crate::event;
 use crate::event::Event;
-use crate::key_code::KeyCode;
 use crate::renderer::{Message, RenderInstruction};
 use crate::util::{Color, Queue, Vector2D};
 use crate::widget::{Layout, Widget};
@@ -162,6 +160,10 @@ impl Widget for RootWidget {
     }
 
     fn set_offset(&mut self, _offset: Vector2D) {}
+
+    fn set_clip_point(&mut self, _clip_point: Option<Vector2D>) {}
+
+    fn set_clip_size(&mut self, _clip_size: Option<Vector2D>) {}
 
     fn is_cursor_inside(&mut self, _cursor_pos: Vector2D) -> bool {
         false

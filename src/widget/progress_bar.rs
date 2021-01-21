@@ -1,6 +1,4 @@
-use crate::event;
 use crate::event::Event;
-use crate::key_code::KeyCode;
 use crate::renderer::{Message, RenderInstruction};
 use crate::util::{Color, Queue, Vector2D};
 use crate::widget::{Layout, Widget};
@@ -56,7 +54,7 @@ impl ProgressBarWidget {
 }
 
 impl Widget for ProgressBarWidget {
-    fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {}
+    fn on_event(&mut self, _event: Event, _messages: &mut Queue<Box<dyn Message>>) {}
 
     fn set_id(&mut self, id: usize) {
         self.id = id;
@@ -164,6 +162,14 @@ impl Widget for ProgressBarWidget {
         self.offset = offset;
     }
 
+    fn set_clip_point(&mut self, _clip_point: Option<Vector2D>) {
+        unimplemented!();
+    }
+
+    fn set_clip_size(&mut self, _clip_size: Option<Vector2D>) {
+        unimplemented!();
+    }
+    
     fn is_cursor_inside(&mut self, _cursor_pos: Vector2D) -> bool {
         false
     }

@@ -21,6 +21,7 @@ pub mod button_view;
 pub mod checkbox;
 pub mod slider;
 pub mod textbox;
+pub mod sliver_view;
 pub mod tooltip_view;
 
 /// Constraints that a parent imposes to its children
@@ -69,7 +70,7 @@ pub enum Layout {
     Grid(Axis, usize),
     /// Sliver layout is a portion of a scrollable area that can be 
     /// defined to behave in a special way
-    Sliver(Axis),
+    Sliver(Axis, f64, usize),
     /// Layout undefined
     None,
 }
@@ -367,6 +368,12 @@ pub trait Widget {
     /// `offset` - the offset to be assigned to the widget
     fn set_offset(&mut self, offset: Vector2D);
 
+    /// TODO: documentar
+    fn set_clip_point(&mut self, clip_point: Option<Vector2D>);
+
+    /// TODO: documnetar
+    fn set_clip_size(&mut self, clip_size: Option<Vector2D>);
+
     /// Decomposes the layout constraints to the children of the current widget
     ///
     /// # Arguments
@@ -429,6 +436,11 @@ pub trait Widget {
                 let mut children_dirty = false;
 
                 for value in children.iter_mut() {
+                    // Stop if no more widgets can be drawn
+                    if max.x== 0. || max.y == 0. {
+                        break;
+                    }
+
                     if let Some(child) = value.upgrade() {
                         if children_dirty {
                             child.borrow_mut().set_dirty(true);
@@ -518,8 +530,85 @@ pub trait Widget {
                     }
                 }
             },
-            Layout::Sliver(_axis) => {
-                unimplemented!();
+            Layout::Sliver(axis, shift, start) => {
+                // For children size
+                let mut child_size: Vector2D;
+                let mut child_clip_point: Vector2D;
+                let mut child_clip_size: Vector2D;
+
+                let mut children_dirty = false;
+
+                let mut mutable_shift = *shift;
+
+                for value in children.as_mut_slice()[*start..].iter_mut() {
+                    // Stop if no more widgets can be drawn
+                    if max.x == 0. || max.y == 0. {
+                        break;
+                    }
+
+                    if let Some(child) = value.upgrade() {
+                        if children_dirty {
+                            child.borrow_mut().set_dirty(true);
+                        } else if child.borrow_mut().is_dirty() {
+                            children_dirty = true;
+                        }
+
+                        // Get original child dimensions and do something to handle
+                        // the dimensions assigned to the child
+                        child_size = child.borrow_mut().original_size().min(max);
+
+                        // Update the constraints and position of next child
+                        match axis {
+                            Axis::Horizontal => {
+                                // Update child size with shift
+                                child_size.x -= mutable_shift;
+                                
+                                // Update clipping of child
+                                child_clip_point = Vector2D::new(mutable_shift, 0.);
+
+                                child_clip_size = child.borrow_mut().size() - Vector2D::new(mutable_shift, 0.);
+
+                                child.borrow_mut().set_clip_point(Some(child_clip_point));
+
+                                child.borrow_mut().set_clip_size(Some(child_clip_size));
+
+                                // Pass the child the assigned dimensions
+                                child.borrow_mut().build(
+                                    position,
+                                    child_size,
+                                    id_machine,
+                                    instruction_collection,
+                                );
+                                max.x -= child_size.x;
+                                position.x += child_size.x;
+                            }
+                            Axis::Vertical => {
+                                // Update child size with to shift
+                                child_size.y -= mutable_shift;
+                                
+                                // Update clipping of child
+                                child_clip_point = Vector2D::new(0., mutable_shift);
+
+                                child_clip_size = child.borrow_mut().size() - Vector2D::new(0., mutable_shift);
+
+                                child.borrow_mut().set_clip_point(Some(child_clip_point));
+
+                                child.borrow_mut().set_clip_size(Some(child_clip_size));
+
+                                // Pass the child the assigned dimensions
+                                child.borrow_mut().build(
+                                    position,
+                                    child_size,
+                                    id_machine,
+                                    instruction_collection,
+                                );
+                                max.y -= child_size.y;
+                                position.y += child_size.y;
+                            }
+                        };
+                    }
+                    mutable_shift = 0.;
+                }
             }
             Layout::None => {
                 for value in children.iter_mut() {

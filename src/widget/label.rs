@@ -48,6 +48,12 @@ pub struct LabelWidget {
     
     /// The label's offset vector coordinates
     offset: Vector2D,
+
+    /// TODO: documentar
+    clip_point: Option<Vector2D>,
+
+    /// TODO: documentar
+    clip_size: Option<Vector2D>,
 }
 
 impl LabelWidget {
@@ -82,6 +88,8 @@ impl LabelWidget {
             original_size: size,
             layout: Layout::None,
             offset: Vector2D::new(0., 0.),
+            clip_point: None,
+            clip_size: None,
         }
     }
 
@@ -110,14 +118,17 @@ impl Widget for LabelWidget {
     }
 
     fn recipe(&self) -> Vec<RenderInstruction> {
+        let clip_point = if let Some(clip_point) = self.clip_point {clip_point} else {self.position};
+        let clip_size = if let Some(clip_size) = self.clip_size {clip_size} else {self.size};
+
         vec![
             // Label rectangle.
             RenderInstruction::DrawRect {
                 point: self.position,
                 color: self.background_color.clone(),
                 size: self.size,
-                clip_point: self.position,
-                clip_size: self.size,
+                clip_point: clip_point,
+                clip_size: clip_size,
             },
             // Label Text
             RenderInstruction::DrawText {
@@ -125,8 +136,8 @@ impl Widget for LabelWidget {
                 color: self.foreground_color,
                 font_size: self.font_size,
                 string: self.text.clone(),
-                clip_point: self.position,
-                clip_size: self.size,
+                clip_point: clip_point,
+                clip_size: clip_size,
             },
         ]
     }
@@ -154,6 +165,7 @@ impl Widget for LabelWidget {
     fn size(&mut self) -> Vector2D {
         self.size
     }
+
     fn original_size(&mut self) -> Vector2D {
         self.original_size
     }
@@ -208,5 +220,13 @@ impl Widget for LabelWidget {
 
     fn is_cursor_inside(&mut self, _cursor_pos : Vector2D) -> bool {
         false
+    }
+
+    fn set_clip_point(&mut self, clip_point: Option<Vector2D>) {
+        self.clip_point = clip_point;
+    }
+
+    fn set_clip_size(&mut self, clip_size: Option<Vector2D>) {
+        self.clip_size = clip_size;
     }
 }
