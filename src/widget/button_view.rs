@@ -8,10 +8,12 @@ use std::cell::RefCell;
 use std::rc::Weak;
 use std::time::Instant;
 
-/// Time required to press be considered long
+/// Minimum time to be considered a long press
 const ON_LONG_PRESS_TIME: u128 = 500;
 
-/// Button is a widget that reacts to touches
+/// Button is a widget that reacts to touches.
+/// It can be used as a container to allow child to be clickable,
+/// for example, an icon or a lable
 #[derive(Clone)]
 pub struct ButtonViewWidget {
     /// The button's identifier
@@ -29,7 +31,7 @@ pub struct ButtonViewWidget {
     /// The message to be handled when a user long press
     on_long_press: Option<Box<dyn Message>>,
 
-    /// Whether the button is pressed
+    /// Whether the button state is pressed
     is_pressed: bool,
 
     /// The instant when the button was clicked
@@ -116,6 +118,7 @@ impl Widget for ButtonViewWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
         match event {
             event::Event::Mouse(event::Mouse::CursorMoved { x: x_pos, y: y_pos }) => {
+                //update cursor_pos on mouse move
                 self.cursor_pos = Vector2D::new(x_pos as f64, y_pos as f64);
                 for value in self.children.iter_mut() {
                     if let Some(child) = value.upgrade() {
@@ -124,7 +127,9 @@ impl Widget for ButtonViewWidget {
                 }
             }
             event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
+                //when left mouse button is pressed do something if button is clickable and if messages aren't empty
                 if self.is_clickable && (self.on_press.is_some() || self.on_long_press.is_some()) {
+                    //check if cursor is inside button area
                     if self.is_cursor_inside(self.cursor_pos) {
                         self.is_pressed = true;
                         self.click_time = Instant::now();
@@ -132,8 +137,11 @@ impl Widget for ButtonViewWidget {
                 }
             }
             event::Event::Mouse(event::Mouse::ButtonReleased(event::MouseButton::Left)) => {
+                //when left mouse button is released do something if button state is pressed
                 if self.is_pressed {
                     self.is_pressed = false;
+                    //check if cursor is inside button area
+                    //if the release it's outside we don't consider it as a click event
                     if self.is_cursor_inside(self.cursor_pos) {
                         if self.click_time.elapsed().as_millis() < ON_LONG_PRESS_TIME {
                             if let Some(mut message) = self.on_press.clone() {
@@ -150,6 +158,7 @@ impl Widget for ButtonViewWidget {
                 }
             }
             _ => {
+                //call on_event to button children
                 for value in self.children.iter_mut() {
                     if let Some(child) = value.upgrade() {
                         child.borrow_mut().on_event(event, messages);

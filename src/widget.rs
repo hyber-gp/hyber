@@ -122,10 +122,10 @@ pub trait Widget {
     /// * `id` - the identifier of the widget
     fn set_id(&mut self, id: usize);
 
-    /// Detect if the cursor is in the widget's position
+    /// Detect if the cursor is in the widget's area
     ///
     /// # Returns
-    /// True, if the cursor is in the widget's position, false otherwise
+    /// True, if the cursor is in the widget's area, false otherwise
     ///
     /// # Arguments
     /// * `cursor_pos` - the position of the cursor
