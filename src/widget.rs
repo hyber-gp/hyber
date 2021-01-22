@@ -25,6 +25,7 @@ pub mod root;
 pub mod slider;
 pub mod tab;
 pub mod textbox;
+pub mod sliver_view;
 pub mod tooltip_view;
 
 /// Constraints that a parent imposes to its children
@@ -76,7 +77,7 @@ pub enum Layout {
     Grid(Axis, usize),
     /// Sliver layout is a portion of a scrollable area that can be
     /// defined to behave in a special way
-    Sliver(Axis),
+    Sliver(Axis, f64, usize),
     /// Layout undefined
     None,
 }
@@ -85,7 +86,7 @@ pub enum Layout {
 ///
 /// _**Note:** Based on Flutter documentation about the axis enum at
 /// https://api.flutter.dev/flutter/painting/Axis-class.html
-#[derive(Clone)]
+#[derive(Clone,Copy)]
 pub enum Axis {
     /// The widgets are aligned left and right
     Horizontal,
@@ -374,6 +375,12 @@ pub trait Widget {
     /// `offset` - the offset to be assigned to the widget
     fn set_offset(&mut self, offset: Vector2D);
 
+    /// TODO: documentar
+    fn set_clip_point(&mut self, clip_point: Option<Vector2D>);
+
+    /// TODO: documnetar
+    fn set_clip_size(&mut self, clip_size: Option<Vector2D>);
+
     /// Decomposes the layout constraints to the children of the current widget
     ///
     /// # Arguments
@@ -435,6 +442,11 @@ pub trait Widget {
                 let mut children_dirty = false;
 
                 for value in children.iter_mut() {
+                    // Stop if no more widgets can be drawn
+                    if max.x== 0. || max.y == 0. {
+                        break;
+                    }
+
                     if let Some(child) = value.upgrade() {
                         if children_dirty {
                             child.borrow_mut().set_dirty(true);
@@ -524,8 +536,85 @@ pub trait Widget {
                     }
                 }
             },
-            Layout::Sliver(_axis) => {
-                unimplemented!();
+            Layout::Sliver(axis, shift, start) => {
+                // For children size
+                let mut child_size: Vector2D;
+
+                let mut children_dirty = false;
+
+                let mut mutable_shift = *shift;
+
+                for value in children.as_mut_slice()[*start..].iter_mut() {
+                    // Stop if no more widgets can be drawn
+                    if max.x == 0. || max.y == 0. {
+                        break;
+                    }
+
+                    if let Some(child) = value.upgrade() {
+                        if children_dirty {
+                            child.borrow_mut().set_dirty(true);
+                        } else if child.borrow_mut().is_dirty() {
+                            children_dirty = true;
+                        }
+
+                        // Get original child dimensions
+                        child_size = child.borrow_mut().original_size();
+
+                        // Update the constraints and position of next child
+                        match axis {
+                            Axis::Horizontal => {
+                                // Update position of child
+                                position.x -= mutable_shift;
+                                // Update maximum constraints
+                                max.x += mutable_shift;
+                                
+                                // Update height of child
+                                child_size.y = child_size.y.min(max.y);
+
+                                // Update clipping of child
+                                child.borrow_mut().set_clip_point(Some(position));
+                                child.borrow_mut().set_clip_size(Some(child_size.min(max)));
+
+                                // Pass the child the assigned dimensions
+                                child.borrow_mut().build(
+                                    position,
+                                    child_size,
+                                    id_machine,
+                                    instruction_collection,
+                                );
+                                
+                                max.x -= child_size.x;
+                                position.x += child_size.x;
+                            }
+                            Axis::Vertical => {
+                                // Update position of child
+                                position.y -= mutable_shift;
+                                // Update maximum constraints
+                                max.y += mutable_shift;
+                                
+                                // Update width of child
+                                child_size.x = child_size.x.min(max.x);
+
+                                // Update clipping of child
+                                child.borrow_mut().set_clip_point(Some(position));
+                                child.borrow_mut().set_clip_size(Some(child_size.min(max)));
+
+                                // Pass the child the assigned dimensions
+                                child.borrow_mut().build(
+                                    position,
+                                    child_size,
+                                    id_machine,
+                                    instruction_collection,
+                                );
+                                
+                                max.y -= child_size.y;
+                                position.y += child_size.y;
+                            }
+                        };
+                    }
+                    
+                    mutable_shift = 0.;
+                }
             }
             Layout::None => {
                 for value in children.iter_mut() {

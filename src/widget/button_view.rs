@@ -255,6 +255,14 @@ impl Widget for ButtonViewWidget {
         self.offset = offset;
     }
 
+    fn set_clip_point(&mut self, _clip_point: Option<Vector2D>) {
+        unimplemented!();
+    }
+
+    fn set_clip_size(&mut self, _clip_size: Option<Vector2D>) {
+        unimplemented!();
+    }
+    
     fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
         if cursor_pos.x >= self.position.x
             && cursor_pos.x <= (self.position.x + self.size.x)

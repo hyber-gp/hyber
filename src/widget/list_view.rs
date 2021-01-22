@@ -155,6 +155,14 @@ impl Widget for ListViewWidget {
 
     fn set_offset(&mut self, _offset: Vector2D) {}
 
+    fn set_clip_point(&mut self, _clip_point: Option<Vector2D>) {
+        unimplemented!();
+    }
+
+    fn set_clip_size(&mut self, _clip_size: Option<Vector2D>) {
+        unimplemented!();
+    }
+
     fn is_cursor_inside(&mut self, _cursor_pos : Vector2D) -> bool {
         false
     }
