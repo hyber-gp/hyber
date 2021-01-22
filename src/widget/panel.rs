@@ -6,6 +6,7 @@ use crate::widget::{Layout, Widget};
 use std::cell::RefCell;
 use std::rc::Weak;
 
+/// <span style="color:red">NOT IMPLEMENTED.</span>
 #[derive(Clone)]
 pub struct PanelWidget {
     id: usize,

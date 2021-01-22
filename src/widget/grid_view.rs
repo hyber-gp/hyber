@@ -71,7 +71,6 @@ impl Widget for GridViewWidget {
     }
 
     fn recipe(&self) -> Vec<RenderInstruction> {
-        // TODO: Debater se isto deve ser usado como clear do ecrã.
         vec![]
     }
 

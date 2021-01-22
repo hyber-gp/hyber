@@ -67,7 +67,6 @@ impl Widget for ListViewWidget {
     }
 
     fn recipe(&self) -> Vec<RenderInstruction> {
-        // TODO: Debater se isto deve ser usado como clear do ecrã.
         vec![]
     }
 

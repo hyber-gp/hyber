@@ -1,3 +1,7 @@
+//! Contains the foundational elements for widgets.
+//! Widgets implement the [`Widget`] trait, containing a set of basic functions shared among all widgets.
+//! [`hyber`](`crate`) has a set of basic widgets implemented, each with their own module.
+
 use crate::event::Event;
 use crate::renderer::Message;
 use crate::renderer::RenderInstruction;
@@ -9,46 +13,49 @@ use crate::util::Vector2D;
 use std::cell::RefCell;
 use std::rc::Weak;
 
+pub mod button_view;
+pub mod checkbox;
 pub mod grid_view;
-pub mod progress_bar;
 pub mod icon;
 pub mod label;
 pub mod list_view;
 pub mod panel;
+pub mod progress_bar;
 pub mod root;
-pub mod tab;
-pub mod button_view;
-pub mod checkbox;
 pub mod slider;
+pub mod tab;
 pub mod textbox;
 pub mod tooltip_view;
 
 /// Constraints that a parent imposes to its children
 ///
-/// _**Note:** Based on Flutter documentation about constraints at 
+/// _**Note:** Based on Flutter documentation about constraints at
 /// https://flutter.dev/docs/development/ui/layout/constraints
 pub enum ConstraintType {
     /// The widget tells its child that it must be of a certain size
-    Tight { 
+    Tight {
         /// The exact widget's size (width and height)
-        size: Vector2D 
+        size: Vector2D,
     },
     /// The widget tells its child that it can be smaller than a certain size
-    Loose { 
+    Loose {
         /// The minimum widget's size (width and height)
-        min: Vector2D, 
+        min: Vector2D,
         /// The maximum widget's size (width and height)
-        max: Vector2D 
+        max: Vector2D,
     },
 }
 
-// TODO: Ver isto
+// TODO: Not implemented
+/// <span style="color:red">NOT IMPLEMENTED.</span> Struct for flex properties (whether to fill the maximum possible area or have a specific size)
+///
 pub enum Num {
     Num(usize),
     Infinity,
 }
 
-// TODO: ver (??)
+// TODO: Not implemented
+/// <span style="color:red">NOT IMPLEMENTED.</span> To be used for animation type. Part of the initial work of [`panel::PanelWidget`] widget.
 pub enum Animation {
     Reveal,
     Push,
@@ -56,9 +63,9 @@ pub enum Animation {
 
 /// Type of widget's layout
 ///
-/// _**Note:** Based on Flutter documentation about sliver layout at 
+/// _**Note:** Based on Flutter documentation about sliver layout at
 /// https://flutter.dev/docs/development/ui/advanced/slivers and based
-/// on Java documentation about layout components at 
+/// on Java documentation about layout components at
 /// https://docs.oracle.com/javase/tutorial/uiswing/layout
 #[derive(Clone)]
 pub enum Layout {
@@ -67,7 +74,7 @@ pub enum Layout {
     Box(Axis),
     /// Grid layout places components in a grid of cells
     Grid(Axis, usize),
-    /// Sliver layout is a portion of a scrollable area that can be 
+    /// Sliver layout is a portion of a scrollable area that can be
     /// defined to behave in a special way
     Sliver(Axis),
     /// Layout undefined
@@ -76,7 +83,7 @@ pub enum Layout {
 
 /// Direction in which widgets are aligned
 ///
-/// _**Note:** Based on Flutter documentation about the axis enum at 
+/// _**Note:** Based on Flutter documentation about the axis enum at
 /// https://api.flutter.dev/flutter/painting/Axis-class.html
 #[derive(Clone)]
 pub enum Axis {
@@ -86,10 +93,10 @@ pub enum Axis {
     Vertical,
 }
 
-/// Widgets are part of a user interface. They can be rendered on the 
+/// Widgets are part of a user interface. They can be rendered on the
 /// display and they can contain as many childs as they need. The root
 /// widget is at the top of the widget tree. He manages all the widgets
-/// to be displayed since they are childs of him. Then, all widgets 
+/// to be displayed since they are childs of him. Then, all widgets
 /// have their own child tree.
 pub trait Widget {
     /// Detect if the event is being done on this widget and then update the
@@ -129,7 +136,7 @@ pub trait Widget {
     ///
     /// # Arguments
     /// * `cursor_pos` - the position of the cursor
-    fn is_cursor_inside(&mut self, cursor_pos : Vector2D) -> bool;
+    fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool;
 
     /// Gets the collection of renderer instructions needed to draw this widget
     ///
@@ -201,7 +208,7 @@ pub trait Widget {
 
     /// Gets the position of the widget's top left corner
     ///
-    /// # Returns 
+    /// # Returns
     /// The position of the widget's top left corner
     ///
     /// # Arguments
@@ -218,7 +225,7 @@ pub trait Widget {
 
     /// Gets the widget's current size (width and height)
     ///
-    /// # Returns 
+    /// # Returns
     /// The widget's current size (width and height)
     ///
     /// # Arguments
@@ -235,7 +242,7 @@ pub trait Widget {
 
     /// Gets the widget's original size (width and height)
     ///
-    /// # Returns 
+    /// # Returns
     /// The widget's original size (width and height)
     ///
     /// # Arguments
@@ -252,7 +259,7 @@ pub trait Widget {
 
     /// Gets the widget's layout
     ///
-    /// # Returns 
+    /// # Returns
     /// The widget's layout
     ///
     /// # Arguments
@@ -272,7 +279,7 @@ pub trait Widget {
 
     /// Gets the offset vector coordinates related with the widget's margin
     ///
-    /// # Returns 
+    /// # Returns
     /// The offset vector coordinates
     ///
     /// # Arguments
@@ -292,7 +299,7 @@ pub trait Widget {
 
     /// Gets some widget's attributes values
     ///
-    /// # Returns 
+    /// # Returns
     /// The widget's attributes values
     ///
     /// # Arguments
@@ -311,7 +318,7 @@ pub trait Widget {
 
     /// Sets the position of the widget's top left corner (x-position and y-position)
     ///
-    /// # Returns 
+    /// # Returns
     /// No returns
     ///
     /// # Arguments
@@ -331,7 +338,7 @@ pub trait Widget {
 
     /// Sets the widget's current size (width and height)
     ///
-    /// # Returns 
+    /// # Returns
     /// No returns
     ///
     /// # Arguments
@@ -351,7 +358,7 @@ pub trait Widget {
 
     /// Sets the widget's original size (width and height)
     ///
-    /// # Returns 
+    /// # Returns
     /// No returns
     ///
     /// # Arguments
@@ -360,7 +367,7 @@ pub trait Widget {
 
     /// Sets the widget's offset vector coordinates according to his margins
     ///
-    /// # Returns 
+    /// # Returns
     /// No returns
     ///
     /// # Arguments
@@ -413,7 +420,6 @@ pub trait Widget {
 
         // Get children, layout, and offset of widget
         let (_, children, _, size, _, layout, offset) = self.get_fields();
-
 
         match layout {
             Layout::Box(axis) => {

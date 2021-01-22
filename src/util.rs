@@ -1,3 +1,6 @@
+//! Contains helper functions and structures.
+//!
+
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// A structure to give an unique identifier within the library to the application in use

@@ -1,3 +1,7 @@
+//! Contains the foundational elements for displays.
+//! Programmers need to implement the [`Display`] trait on their display system.
+//! Besides the trait, there is also a struct responsible for describing the display's settings.
+
 use crate::util::Vector2D;
 
 /// Optional display's settings that should be used when creating a new Display
@@ -59,8 +63,8 @@ impl DisplayDescritor {
     }
 }
 
-/// Display is the window that are presented to the user. The widgets are 
-// rendered within this display, what makes possible to render the user interface
+/// Display is the window that is presented to the user. Widgets are 
+/// rendered within this display, composing the user interface.
 pub trait Display {
     /// Data buffer to be displayed on the window
     type Buffer;

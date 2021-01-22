@@ -1,3 +1,6 @@
+//! Contains the key codes for all the keyboard events.
+//!
+
 /// Key codification that is being handled
 ///
 /// The keys are being maped according to the keyboarding configuration

@@ -1,3 +1,5 @@
+//! Contains the foundational elements for a renderer. Programmers will need to implement the trait [`Renderer`] into their renderer of choice.
+
 use crate::event::Event;
 use crate::util::Color;
 use crate::util::IDMachine;
@@ -171,18 +173,20 @@ pub enum RenderInstruction {
     },
 }
 
-/// Event messages
+/// Event messages used to execute instructions on the application when triggered by a Widget.
 /// 
-/// This messages are used to inform the application of an event that have occured
+/// When messages are created and enqueued by the widgets, the widget should call their [`set_event`](`self::set_event`) such that the application knows which event triggered the Message.
+/// 
+/// During the [`event_loop`](`self::event_loop`) method, messages are iterated over and their update() function is called.
 pub trait Message: MessageClone {
-    /// Updates the widget according to the message's event
+    /// Executes the code implemented in the Message struct.
     fn update(&self);
 
-    /// Sets the event to the message
+    /// Sets the event associated to the message
     fn set_event(&mut self, event: Event);
 }
 
-/// Trait that allows to provide a blanket implementation for all compatible 
+/// Trait that allows to provide a blanket implementation of Clone for all compatible 
 /// types, without having to implement the rest of Message.
 ///
 /// This Clone is used to solve problems from cloning vector or boxes of messages
@@ -205,7 +209,7 @@ impl Clone for Box<dyn Message> {
     }
 }
 
-/// Agnostic Renderer to handle all agnostic methods to the client's renderer
+/// Trait with the necessary methods that the programmer must implement for their renderer of choice. Every method must be implemented, except one: [`event_loop`](`self::event_loop`).
 pub trait Renderer<D, E> {
     /// Map the events detected (i.e., Window, Keyboard, Mouse) into hyber events
     /// 
