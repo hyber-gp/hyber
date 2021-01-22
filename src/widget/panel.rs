@@ -1,3 +1,4 @@
+use crate::event;
 use crate::event::Event;
 use crate::renderer::{Message, RenderInstruction};
 use crate::util::{Color, Queue, Vector2D};
@@ -5,15 +6,21 @@ use crate::widget::{Layout, Widget};
 
 use std::cell::RefCell;
 use std::rc::Weak;
+use std::time::Instant;
+
+const ON_LONG_PRESS_TIME: u128 = 500;
 
 /// <span style="color:red">NOT IMPLEMENTED.</span>
 #[derive(Clone)]
 pub struct PanelWidget {
     id: usize,
-    text: String,
-    font_size: usize,
+    is_clickable: bool,
     background_color: Color,
-    foreground_color: Color,
+    on_press: Option<Box<dyn Message>>,
+    on_long_press: Option<Box<dyn Message>>,
+    is_pressed: bool,
+    click_time: Instant,
+    cursor_pos: Vector2D,
     dirty: bool,
     children: Vec<Weak<RefCell<dyn Widget>>>,
     position: Vector2D,
@@ -25,18 +32,21 @@ pub struct PanelWidget {
 
 impl PanelWidget {
     pub fn new(
-        text: String,
         size: Vector2D,
-        font_size: usize,
+        is_clickable: bool,
         background_color: Color,
-        foreground_color: Color,
+        on_press: Option<Box<dyn Message>>,
+        on_long_press: Option<Box<dyn Message>>,
     ) -> PanelWidget {
         PanelWidget {
             id: 0,
-            text: text,
-            font_size: font_size,
             background_color: background_color,
-            foreground_color: foreground_color,
+            is_clickable: is_clickable,
+            on_press: on_press,
+            on_long_press: on_long_press,
+            is_pressed: false,
+            click_time: Instant::now(),
+            cursor_pos: Vector2D::new(-1., -1.),
             dirty: true,
             children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
             position: Vector2D::new(0., 0.),
@@ -47,17 +57,93 @@ impl PanelWidget {
         }
     }
 
-    pub fn set_text(&mut self, text: String) {
-        self.text = text;
-        self.dirty = true;
+    pub fn set_is_clickable(&mut self, value: bool) {
+        self.is_clickable = value;
     }
 }
 
 impl Widget for PanelWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
-        for value in self.children.iter_mut() {
-            if let Some(child) = value.upgrade() {
-                child.borrow_mut().on_event(event, messages);
+        match event {
+            event::Event::Mouse(event::Mouse::CursorMoved { x: x_pos, y: y_pos }) => {
+                //update cursor_pos on mouse move
+                self.cursor_pos = Vector2D::new(x_pos as f64, y_pos as f64);
+                for value in self.children.iter_mut() {
+                    if let Some(child) = value.upgrade() {
+                        child.borrow_mut().on_event(event, messages);
+                    }
+                }
+            }
+            event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Left)) => {
+                //when left mouse button is pressed do something if button is clickable and if messages aren't empty
+                if self.is_clickable && (self.on_press.is_some() || self.on_long_press.is_some()) {
+                    //check if cursor is inside button area
+                    if self.is_cursor_inside(self.cursor_pos) {
+                        self.is_pressed = true;
+                        self.click_time = Instant::now();
+                    }
+                }
+            }
+            event::Event::Mouse(event::Mouse::ButtonReleased(event::MouseButton::Left)) => {
+                //when left mouse button is released do something if button state is pressed
+                if self.is_pressed {
+                    self.is_pressed = false;
+                    //check if cursor is inside button area
+                    //if the release it's outside we don't consider it as a click event
+                    if self.is_cursor_inside(self.cursor_pos) {
+                        if self.click_time.elapsed().as_millis() < ON_LONG_PRESS_TIME {
+                            if let Some(mut message) = self.on_press.clone() {
+                                message.set_event(event);
+                                messages.enqueue(message);
+                            }
+                        } else {
+                            if let Some(mut message) = self.on_long_press.clone() {
+                                message.set_event(event);
+                                messages.enqueue(message);
+                            }
+                        }
+                    }
+                }
+            }
+            event::Event::Mouse(event::Mouse::ButtonPressed(event::MouseButton::Right)) => {
+                //when left mouse button is pressed do something if button is clickable and if messages aren't empty
+                if self.is_clickable && (self.on_press.is_some() || self.on_long_press.is_some()) {
+                    //check if cursor is inside button area
+                    if !self.is_cursor_inside(self.cursor_pos) {
+                        self.is_pressed = true;
+                        self.click_time = Instant::now();
+                    }
+                }
+            }
+            event::Event::Mouse(event::Mouse::ButtonReleased(event::MouseButton::Right)) => {
+                //when left mouse button is released do something if button state is pressed
+                if self.is_pressed {
+                    self.is_pressed = false;
+                    //check if cursor is inside button area
+                    //if the release it's outside we don't consider it as a click event
+                    if !self.is_cursor_inside(self.cursor_pos) {
+                        if self.click_time.elapsed().as_millis() < ON_LONG_PRESS_TIME {
+                            if let Some(mut message) = self.on_press.clone() {
+                                message.set_event(event);
+                                messages.enqueue(message);
+                            }
+                        } else {
+                            if let Some(mut message) = self.on_long_press.clone() {
+                                message.set_event(event);
+                                messages.enqueue(message);
+                            }
+                        }
+                    }
+                }
+            }
+
+            _ => {
+                //call on_event to button children
+                for value in self.children.iter_mut() {
+                    if let Some(child) = value.upgrade() {
+                        child.borrow_mut().on_event(event, messages);
+                    }
+                }
             }
         }
     }
@@ -71,25 +157,7 @@ impl Widget for PanelWidget {
     }
 
     fn recipe(&self) -> Vec<RenderInstruction> {
-        vec![
-            // Label rectangle.
-            RenderInstruction::DrawRect {
-                point: self.position,
-                color: self.background_color.clone(),
-                size: self.size,
-                clip_point: self.position,
-                clip_size: self.size,
-            },
-            // Label Text
-            RenderInstruction::DrawText {
-                point: Vector2D::new(self.position.x, self.position.y + self.size.y),
-                color: self.foreground_color,
-                font_size: self.font_size,
-                string: self.text.clone(),
-                clip_point: self.position,
-                clip_size: self.size,
-            },
-        ]
+        vec![]
     }
 
     fn set_dirty(&mut self, value: bool) {
@@ -174,8 +242,16 @@ impl Widget for PanelWidget {
     fn set_clip_size(&mut self, _clip_size: Option<Vector2D>) {
         unimplemented!();
     }
-    
-    fn is_cursor_inside(&mut self, _cursor_pos: Vector2D) -> bool {
-        false
+
+    fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
+        if cursor_pos.x >= self.position.x
+            && cursor_pos.x <= (self.position.x + self.size.x)
+            && cursor_pos.y >= self.position.y
+            && cursor_pos.y <= (self.position.y + self.size.y)
+        {
+            true
+        } else {
+            false
+        }
     }
 }
