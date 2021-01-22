@@ -58,7 +58,7 @@ pub struct TabWidget {
     /// The current cursor's position
     cursor_pos: Vector2D,
     
-    /// The cursor's position at the end of the last long press (i.e., drag)
+    /// The cursor's position where the mouse button was released after a long press (i.e., drag)
     moved_cursor_pos: Vector2D,
 }
 impl TabWidget {
@@ -71,8 +71,8 @@ impl TabWidget {
     /// * `size` - the size (width and height) to be assigned to the tab
     /// * `background_color` - the color to be assigned to the tab's background
     /// * `on_press` - the message to be handled when the tab is pressed
-    /// * `tab_moved` - the message to be handled when the tab is pressed 
-    /// and held for at least the `ON_LONG_PRESS_TIME`
+    /// * `tab_moved` - the message to be handled when the tab is moved/dragged (long pressed)
+    /// or held for at least `ON_LONG_PRESS_TIME`
     pub fn new(
         size: Vector2D,
         background_color: Color,
@@ -98,20 +98,21 @@ impl TabWidget {
         }
     }
 
-    /// Sets the message to be handled when the tab is pressed 
-    /// and held for at least the `ON_LONG_PRESS_TIME`
+    /// Sets the message to be handled when the tab is 
+    /// held for at least the `ON_LONG_PRESS_TIME`
     ///
     /// # Returns
     /// No returns
     ///
     /// # Arguments
-    /// * `new_message` - the new message to be handled when the tab is pressed 
-    /// and held for at least the `ON_LONG_PRESS_TIME`
+    /// * `new_message` - the new message to be handled when the tab is 
+    /// held for at least the `ON_LONG_PRESS_TIME`
     pub fn set_new_message_move(&mut self, new_message: Option<Box<dyn Message>>) {
         self.tab_moved = new_message;
     }
 
-    /// Gets the cursor's position at the end of the last long press (i.e., drag)
+    /// Gets the cursor's position where the mouse button was
+    /// released after a long press (i.e., drag)
     ///
     /// # Returns
     /// The cursor's position at the end of the last long press (i.e., drag)
