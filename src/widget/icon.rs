@@ -12,35 +12,39 @@ use std::rc::Weak;
 pub struct IconWidget {
     /// The icon's identifier
     id: usize,
-    
+
     /// The icon's picture absolute path
     path: String,
-    
+
     /// The icon's draw settings
     options: DrawImageOptions,
-    
+
     /// The icon's brackground color
+    /// TODO: There is an issue regarding the background colour.
+    /// When the bg colour contains red, at least when using
+    /// the library raqote to render the icon widget,
+    /// the system panics with an overflown exception.
     background_color: Color,
-    
+
     /// The dirty flag (i.e., flag used to mark the widgets needed to be rebuilt)
     dirty: bool,
-    
+
     /// The icon's children (i.e., his widgets tree)
     children: Vec<Weak<RefCell<dyn Widget>>>,
-    
-    /// The icon's position, on a two-dimensional space (x-coordinate and y-coordinate) 
+
+    /// The icon's position, on a two-dimensional space (x-coordinate and y-coordinate)
     /// relative to the top left corner
     position: Vector2D,
-    
+
     /// The icon's current size (width and height)
     size: Vector2D,
-    
+
     /// The icon's original size (width and height)
     original_size: Vector2D,
-    
+
     /// The icon's layout
     layout: Layout,
-    
+
     /// The icon's offset vector coordinates
     offset: Vector2D,
 }
@@ -193,7 +197,7 @@ impl Widget for IconWidget {
     fn set_clip_size(&mut self, _clip_size: Option<Vector2D>) {
         unimplemented!();
     }
-    
+
     fn is_cursor_inside(&mut self, _cursor_pos : Vector2D) -> bool {
         false
     }
