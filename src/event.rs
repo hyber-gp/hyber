@@ -123,10 +123,10 @@ pub enum ScrollDelta {
     /// A pixel-based scroll movement
     Pixels {
         /// The number of horizontal pixels scrolled
-        x: usize,
+        x: f64,
 
         /// The number of vertical pixels scrolled
-        y: usize,
+        y: f64,
     },
 }
 

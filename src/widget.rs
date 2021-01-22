@@ -79,7 +79,7 @@ pub enum Layout {
 ///
 /// _**Note:** Based on Flutter documentation about the axis enum at 
 /// https://api.flutter.dev/flutter/painting/Axis-class.html
-#[derive(Clone)]
+#[derive(Clone,Copy)]
 pub enum Axis {
     /// The widgets are aligned left and right
     Horizontal,
@@ -533,8 +533,6 @@ pub trait Widget {
             Layout::Sliver(axis, shift, start) => {
                 // For children size
                 let mut child_size: Vector2D;
-                let mut child_clip_point: Vector2D;
-                let mut child_clip_size: Vector2D;
 
                 let mut children_dirty = false;
 
@@ -553,24 +551,23 @@ pub trait Widget {
                             children_dirty = true;
                         }
 
-                        // Get original child dimensions and do something to handle
-                        // the dimensions assigned to the child
-                        child_size = child.borrow_mut().original_size().min(max);
+                        // Get original child dimensions
+                        child_size = child.borrow_mut().original_size();
 
                         // Update the constraints and position of next child
                         match axis {
                             Axis::Horizontal => {
-                                // Update child size with shift
-                                child_size.x -= mutable_shift;
+                                // Update position of child
+                                position.x -= mutable_shift;
+                                // Update maximum constraints
+                                max.x += mutable_shift;
                                 
+                                // Update height of child
+                                child_size.y = child_size.y.min(max.y);
+
                                 // Update clipping of child
-                                child_clip_point = Vector2D::new(mutable_shift, 0.);
-
-                                child_clip_size = child.borrow_mut().size() - Vector2D::new(mutable_shift, 0.);
-
-                                child.borrow_mut().set_clip_point(Some(child_clip_point));
-
-                                child.borrow_mut().set_clip_size(Some(child_clip_size));
+                                child.borrow_mut().set_clip_point(Some(position));
+                                child.borrow_mut().set_clip_size(Some(child_size.min(max)));
 
                                 // Pass the child the assigned dimensions
                                 child.borrow_mut().build(
@@ -579,21 +576,22 @@ pub trait Widget {
                                     id_machine,
                                     instruction_collection,
                                 );
+                                
                                 max.x -= child_size.x;
                                 position.x += child_size.x;
                             }
                             Axis::Vertical => {
-                                // Update child size with to shift
-                                child_size.y -= mutable_shift;
+                                // Update position of child
+                                position.y -= mutable_shift;
+                                // Update maximum constraints
+                                max.y += mutable_shift;
                                 
+                                // Update width of child
+                                child_size.x = child_size.x.min(max.x);
+
                                 // Update clipping of child
-                                child_clip_point = Vector2D::new(0., mutable_shift);
-
-                                child_clip_size = child.borrow_mut().size() - Vector2D::new(0., mutable_shift);
-
-                                child.borrow_mut().set_clip_point(Some(child_clip_point));
-
-                                child.borrow_mut().set_clip_size(Some(child_clip_size));
+                                child.borrow_mut().set_clip_point(Some(position));
+                                child.borrow_mut().set_clip_size(Some(child_size.min(max)));
 
                                 // Pass the child the assigned dimensions
                                 child.borrow_mut().build(
@@ -602,11 +600,13 @@ pub trait Widget {
                                     id_machine,
                                     instruction_collection,
                                 );
+                                
                                 max.y -= child_size.y;
                                 position.y += child_size.y;
                             }
                         };
                     }
+                    
                     mutable_shift = 0.;
                 }
             }

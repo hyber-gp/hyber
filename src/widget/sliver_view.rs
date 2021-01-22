@@ -1,3 +1,4 @@
+use crate::event;
 use crate::event::Event;
 use crate::renderer::{Message, RenderInstruction};
 use crate::util::{Queue, Vector2D};
@@ -14,9 +15,16 @@ pub struct SliverViewWidget {
     
     /// The list's current size (width and height)
     size: Vector2D,
+
+    /// The cursor's position
+    cursor_pos: Vector2D,
     
     /// The list's original size (width and height)
     original_size: Vector2D,
+
+    /// The button's position, on a two-dimensional space (x-coordinate and y-coordinate) 
+    /// relative to the top left corner
+    position: Vector2D,
     
     /// The list's layout
     layout: Layout,
@@ -41,8 +49,10 @@ impl SliverViewWidget {
         SliverViewWidget {
             id: 0,
             size: size,
+            cursor_pos: Vector2D::new(-1., -1.),
             original_size: size,
-            layout: Layout::Box(axis),
+            position: Vector2D::new(0., 0.),
+            layout: Layout::Sliver(axis, 0., 0),
             dirty: true,
             children: Vec::<Weak<RefCell<dyn Widget>>>::new(),
         }
@@ -51,9 +61,42 @@ impl SliverViewWidget {
 
 impl Widget for SliverViewWidget {
     fn on_event(&mut self, event: Event, messages: &mut Queue<Box<dyn Message>>) {
-        for value in self.children.iter_mut() {
-            if let Some(child) = value.upgrade() {
-                child.borrow_mut().on_event(event, messages);
+        match event {
+            event::Event::Mouse(event::Mouse::CursorMoved { x: x_pos, y: y_pos }) => {
+                self.cursor_pos = Vector2D::new(x_pos as f64, y_pos as f64);
+                for value in self.children.iter_mut() {
+                    if let Some(child) = value.upgrade() {
+                        child.borrow_mut().on_event(event, messages);
+                    }
+                }
+            }
+            event::Event::Mouse(event::Mouse::WheelScrolled { delta }) => {
+                if self.is_cursor_inside(self.cursor_pos) {
+                    if let event::ScrollDelta::Pixels { x, y } = delta {
+                        if let Layout::Sliver(axis, shift, start) = self.layout {
+
+
+                            // TODO: Update `start` -- the index of the first widget drawn on the screen -- and 
+                            // establish a lower limit for scrolling -- should not scroll past the end of the list!
+
+                            self.layout = Layout::Sliver(axis, (shift - y).max(0.), start);
+                        }
+                        self.set_dirty(true);
+                    }
+
+                    for value in self.children.iter_mut() {
+                        if let Some(child) = value.upgrade() {
+                            child.borrow_mut().on_event(event, messages);
+                        }
+                    }
+                }
+            }
+            _ => {
+                for value in self.children.iter_mut() {
+                    if let Some(child) = value.upgrade() {
+                        child.borrow_mut().on_event(event, messages);
+                    }
+                }
             }
         }
     }
@@ -163,8 +206,16 @@ impl Widget for SliverViewWidget {
     fn set_clip_size(&mut self, _clip_size: Option<Vector2D>) {
         unimplemented!();
     }
-
-    fn is_cursor_inside(&mut self, _cursor_pos : Vector2D) -> bool {
-        false
+    
+    fn is_cursor_inside(&mut self, cursor_pos: Vector2D) -> bool {
+        if cursor_pos.x >= self.position.x
+            && cursor_pos.x <= (self.position.x + self.size.x)
+            && cursor_pos.y >= self.position.y
+            && cursor_pos.y <= (self.position.y + self.size.y)
+        {
+            true
+        } else {
+            false
+        }
     }
 }
